@@ -16,4 +16,5 @@ Copy tpRenamer.py file into your Documents/Maya/(Version)/scripts folder and exe
 
 ``` python
 import tpRenamer
+reload(tpRenamer)
 ```
