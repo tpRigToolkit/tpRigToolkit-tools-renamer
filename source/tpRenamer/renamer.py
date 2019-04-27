@@ -16,8 +16,8 @@ from tpQtLib.Qt.QtGui import *
 
 import tpRenamer
 import tpDccLib as tp
-from tpPyUtils import decorators, qtutils
-from tpQtLib.core import window
+from tpPyUtils import decorators
+from tpQtLib.core import window, qtutils
 from tpQtLib.widgets import splitters, expandables, button
 
 NAMING_IT_AVAILABLE = True

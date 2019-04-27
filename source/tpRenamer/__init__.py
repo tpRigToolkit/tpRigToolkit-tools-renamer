@@ -8,9 +8,9 @@ Initialization module for tpRenamer
 from __future__ import print_function, division, absolute_import
 
 import os
-import sys
+import inspect
 
-from tpPyUtils import logger as logger_utils
+from tpPyUtils import importer
 from tpQtLib.core import resource as resource_utils
 
 # =================================================================================
@@ -25,56 +25,51 @@ class tpRenamerResource(resource_utils.Resource, object):
     RESOURCES_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources')
 
 
-class tpRenamer(object):
+class tpRenamer(importer.Importer, object):
     def __init__(self):
-        super(tpRenamer, self).__init__()
+        super(tpRenamer, self).__init__(module_name='tpRenamer')
 
-    @classmethod
-    def initialize(cls, do_reload=False):
-        cls.create_logger()
-        cls.register_resource()
-
-        if do_reload:
-            cls.reload_all()
-
-    @staticmethod
-    def create_logger():
+    def get_module_path(self):
         """
-        Creates and initializes tpRenamer logger
+        Returns path where tpRenamer module is stored
+        :return: str
         """
 
-        global logger
-        logger = logger_utils.Logger(name=tpRenamer.__name__, level=logger_utils.LoggerLevel.DEBUG).logger
-        logger.debug('Initializing tpRenamer Logger ...')
-        return logger
-
-    @staticmethod
-    def register_resource():
-        """
-        Register resource class used to load tpRenamer resources
-        """
-
-        global resource
-        resource = tpRenamerResource
-
-    @staticmethod
-    def reload_all():
-        # if os.environ.get('SOLSTICE_DEV_MODE', '0') == '1':
-        import inspect
-        scripts_dir = os.path.dirname(__file__)
-        for key, module in sys.modules.items():
+        try:
+            mod_dir = os.path.dirname(inspect.getframeinfo(inspect.currentframe()).filename)
+        except Exception:
             try:
-                module_path = inspect.getfile(module)
-            except TypeError:
-                continue
-            if module_path == __file__:
-                continue
-            if module_path.startswith(scripts_dir):
-                reload(module)
+                mod_dir = os.path.dirname(__file__)
+            except Exception:
+                try:
+                    import tpDccLib
+                    mod_dir = tpDccLib.__path__[0]
+                except Exception:
+                    return None
+
+        return mod_dir
+
+
+def init(do_reload=False):
+    """
+    Initializes module
+    :param do_reload: bool, Whether to reload modules or not
+    """
+
+    tprenamer_importer = importer.init_importer(importer_class=tpRenamer, do_reload=do_reload)
+
+    global logger
+    global resource
+    logger = tprenamer_importer.logger
+    resource = tpRenamerResource
+
+    tprenamer_importer.import_modules()
+    tprenamer_importer.import_packages(only_packages=True)
+
 
 
 def run(do_reload=False):
-    tpRenamer.initialize(do_reload=do_reload)
+    init(do_reload=do_reload)
     from tpRenamer import renamer
     win = renamer.run()
     return win
