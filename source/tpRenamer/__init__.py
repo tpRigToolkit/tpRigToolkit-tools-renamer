@@ -67,7 +67,6 @@ def init(do_reload=False):
     tprenamer_importer.import_packages(only_packages=True)
 
 
-
 def run(do_reload=False):
     init(do_reload=do_reload)
     from tpRenamer import renamer
