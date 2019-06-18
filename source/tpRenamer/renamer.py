@@ -16,7 +16,7 @@ from tpQtLib.Qt.QtWidgets import *
 import tpRenamer
 import tpQtLib
 import tpDccLib as tp
-from tpPyUtils import decorators
+from tpPyUtils import decorators, strings
 from tpQtLib.core import window, qtutils
 from tpQtLib.widgets import splitters, search, button
 from tpRenamer.core import manualrenamewidget, autorenamewidget
@@ -30,7 +30,7 @@ except ImportError:
 
 if tp.is_maya():
     import tpMayaLib as maya
-    from tpMayaLib.core import decorators as maya_decorators, name as naming
+    from tpMayaLib.core import decorators as maya_decorators
     undo_decorator = maya_decorators.undo
 else:
     undo_decorator = decorators.empty_decorator
@@ -168,33 +168,12 @@ class Renamer(window.MainWindow, object):
 
         self._names_list = QTreeWidget(self)
         self._names_list.setHeaderHidden(True)
-        self._names_list.setSortingEnabled(True)
+        self._names_list.setSortingEnabled(False)
         self._names_list.setRootIsDecorated(False)
         self._names_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self._names_list.sortByColumn(0, Qt.AscendingOrder)
         self._names_list.setUniformRowHeights(True)
         self._names_list.setAlternatingRowColors(True)
-        self._names_list.setStyleSheet(
-            '''
-            QTreeView{alternate-background-color: #3b3b3b;}
-            QTreeView::item {padding:3px;}
-            QTreeView::item:!selected:hover {
-                background-color: #5b5b5b;
-                margin-left:-3px;
-                border-left:0px;
-            }
-            QTreeView::item:selected {
-                background-color: #48546a;
-                border-left:2px solid #6f93cf;
-                padding-left:2px;
-            }
-            QTreeView::item:selected:hover {
-                background-color: #586c7a;
-                border-left:2px solid #6f93cf;
-                padding-left:2px;
-            }
-            '''
-        )
 
         names_layout.addWidget(self._names_list)
 
@@ -235,9 +214,10 @@ class Renamer(window.MainWindow, object):
         self._preview_btn.setChecked(True)
         self._preview_btn.setMinimumWidth(100)
         self._preview_btn.setMaximumWidth(100)
-        self.rename_btn = QPushButton('Rename')
+        self._rename_btn = QPushButton('Select objects in the list to rename ...')
+        self._rename_btn.setEnabled(False)
         preview_layout.addWidget(self._preview_btn)
-        preview_layout.addWidget(self.rename_btn)
+        preview_layout.addWidget(self._rename_btn)
 
         self.update_names_list()
 
@@ -265,6 +245,12 @@ class Renamer(window.MainWindow, object):
 
         self._none_btn.clicked.connect(self._on_select_none_clicked)
         self._all_btn.clicked.connect(self._on_select_all_clicked)
+
+        self.manual_rename_widget.renameUpdate.connect(self.update_current_items)
+        self.manual_rename_widget.replaceUpdate.connect(self.update_current_items)
+
+        self._preview_btn.toggled.connect(self.update_current_items)
+        self._rename_btn.clicked.connect(self._on_rename)
 
     #
     #     self._prefix_check.stateChanged.connect(self._prefix_line.setEnabled)
@@ -312,248 +298,42 @@ class Renamer(window.MainWindow, object):
         else:
             event.ignore()
 
-    def rename_nodes(self):
-        """
-        Method that renames selected nodes
-        """
-
-        selected_objs = tp.Dcc.selected_nodes(full_path=False)
-        rename(selected_objs, *self._get_rename_settings())
-
-    def auto_rename_nodes(self, auto_name):
-        """
-        Method that auto rename selected nodes
-        """
-
-        selected_objs = tp.Dcc.selected_nodes(full_path=False)
-        rename(selected_objs, text=auto_name, auto_rename=True)
-
-    def replace_nodes(self):
-        """
-        Method that replace node names
-        """
-
-        replace_text = str(self._replace_line.text())
-        with_text = str(self._with_line.text())
-
-        if tp.Dcc.get_name() == tp.Dccs.Maya:
-            if self._all_radio.isChecked():
-                nodes = maya.cmds.ls()
-                replace_nodes = replace(nodes, replace_text, with_text)
-            else:
-                nodes = maya.cmds.ls(sl=True)
-
-                if self._hierarchy_cbx.isChecked() and self._hierarchy_cbx.isEnabled():
-                    new_nodes = list()
-                    replace_nodes = list()
-
-                    # First, replace the hierarchy elements of the selected objects
-                    for node in nodes:
-                        maya.cmds.select(node)
-                        maya.cmds.select(hi=True)
-                        childs = maya.cmds.ls(sl=True, type='transform')
-                        if node in childs:
-                            childs.remove(node)
-                        for child in childs:
-                            new_nodes.append(child)
-                        return_nodes = replace(new_nodes, replace_text, with_text)
-                        for n in return_nodes:
-                            replace_nodes.append(n)
-
-                    # Finally we replace the names of the selected nodes
-                    return_nodes = replace(nodes, replace_text, with_text)
-                    for n in return_nodes:
-                        replace_nodes.append(n)
-                else:
-                    replace_nodes = replace(nodes, replace_text, with_text)
-
-            try:
-                if len(replace_nodes) > 0:
-                    maya.cmds.select(replace_nodes)
-                    tpRenamer.logger.debug('Successfully renamed ' + str(len(replace_nodes)) + ' node(s)!')
-            except:
-                maya.cmds.select(clear=True)
-        else:
-            raise NotImplementedError()
-
     def update_names_list(self):
         """
         Function that updates names list taking into account current nomenclature type
         """
 
         self._names_list.clear()
+        self._names_list.setSortingEnabled(True)
 
-        objs_names = list()
-        if self._all_radio.isChecked():
-            objs_names.extend(tp.Dcc.all_scene_objects(full_path=False))
-        elif self._selected_radio.isChecked():
-            objs_names.extend(tp.Dcc.selected_nodes(full_path=False))
-            if objs_names and self._hierarchy_cbx.isChecked():
-                children_list = list()
-                for obj in objs_names:
-                    children = tp.Dcc.list_children(obj, all_hierarchy=True, full_path=False)
-                    if children:
-                        children_list.extend(children)
-                children_list = list(set(children_list))
-                objs_names.extend(children_list)
+        try:
+            objs_names = list()
+            if self._all_radio.isChecked():
+                objs_names.extend(tp.Dcc.all_scene_objects(full_path=True))
+            elif self._selected_radio.isChecked():
+                objs_names.extend(tp.Dcc.selected_nodes(full_path=True))
+                if objs_names and self._hierarchy_cbx.isChecked():
+                    children_list = list()
+                    for obj in objs_names:
+                        children = tp.Dcc.list_children(obj, all_hierarchy=True, full_path=True)
+                        if children:
+                            children_list.extend(children)
+                    children_list = list(set(children_list))
+                    objs_names.extend(children_list)
 
-        if self._objects_btn.isChecked():
-            self._update_objects_names_list(objs_names)
-        elif self._materials_btn.isChecked():
-            self._update_materials_names_list(objs_names)
-        elif self._layers_btn.isChecked():
-            self._update_layers_names_list(objs_names)
-        elif self._lights_btn.isChecked():
-            self._update_assets_names_list(objs_names)
-        elif self._files_btn.isChecked():
-            self._update_files_names_list(objs_names)
+            if self._objects_btn.isChecked():
+                self._update_objects_names_list(objs_names)
 
-        self._on_filter_names_list(self._names_filter.get_text())
+            self._on_filter_names_list(self._names_filter.get_text())
+        finally:
+            self._names_list.setSortingEnabled(False)
 
-    @undo_decorator
-    def add_prefix(self):
+    def update_current_items(self):
         """
-        Method that adds a prefix to selected nodes
+        Function that updates the names of the current selected items
         """
 
-        if tp.Dcc.get_name() == tp.Dccs.Maya:
-            sel = maya.cmds.ls(sl=True)
-        else:
-            raise NotImplementedError()
-
-        prefix = str(self._add_prefix_line.text())
-        if len(sel) > 0:
-            if prefix == '':
-                pass
-            else:
-                for obj in sel:
-                    new_name = '%s_%s' % (prefix, obj)
-                    maya.cmds.rename(obj, new_name)
-                    tpRenamer.logger.debug('Sucesfully renamed ' + str(len(sel)) + ' node(s)!')
-
-    @undo_decorator
-    def add_suffix(self):
-        """
-        Method that adds a suffix to selected nodes
-        """
-
-        if tp.Dcc.get_name() == tp.Dccs.Maya:
-            sel = maya.cmds.ls(selection=True)
-        else:
-            raise NotImplementedError()
-
-        suffix = str(self._add_suffix_line.text())
-
-        if len(sel) <= 0:
-            tpRenamer.logger.warning('Renamer: You have to select at least one object')
-        elif suffix == '':
-            pass
-        else:
-            for obj in sel:
-                new_name = "%s_%s" % (obj, suffix)
-                maya.cmds.rename(obj, new_name)
-                tpRenamer.logger.debug('Sucesfully renamed ' + str(len(sel)) + ' node(s)!')
-
-    def _update_hierarchy_cbx(self):
-        if self._all_radio.isChecked():
-            self._hierarchy_cbx.setEnabled(False)
-        else:
-            self._hierarchy_cbx.setEnabled(True)
-
-    def _get_rename_settings(self):
-
-        text = str(self._renamer_line.text()).strip()
-
-        naming_method = bool(self._renamer_mult_method_combo.currentIndex())
-        padding = 0
-        upper = True
-
-        if naming_method == 0:
-            padding = self._frame_pad_spin.value()
-        else:
-            upper = self._upper_radio.isChecked()
-
-        prefix = ''
-        suffix = ''
-
-        if self._prefix_check.isChecked():
-            prefix = self._prefix_line.text()
-        if self._suffix_check.isChecked():
-            suffix = self._suffix_line.text()
-
-        if self._none_side.isChecked():
-            side = ''
-        if self._right_side.isChecked():
-            if self._capital_side.isChecked():
-                side = 'R'
-            else:
-                side = 'r'
-        if self._center_side.isChecked():
-            if self._capital_side.isChecked():
-                side = 'C'
-            else:
-                side = 'c'
-        if self._mid_side.isChecked():
-            if self._capital_side.isChecked():
-                side = 'M'
-            else:
-                side = 'm'
-        if self._left_side.isChecked():
-            if self._capital_side.isChecked():
-                side = 'L'
-            else:
-                side = 'l'
-
-        joint_end = self._last_joint_is_end_cbx.isChecked()
-
-        return text, prefix, suffix, padding, naming_method, upper, side, joint_end
-
-    def _update_example_rename(self):
-        """
-        Method that updates the example line edit
-        """
-
-        example_text = ''
-
-        text, prefix, suffix, padding, naming_method, upper, side, joint_end = self._get_rename_settings()
-
-        if not text:
-            self._renamer_lbl.setText('<font color=#646464>e.g.</font>')
-            return
-
-        if prefix:
-            example_text += '%s_' % prefix
-
-        if side != '':
-            example_text += '%s_' % side
-
-        example_text += '%s_' % text
-
-        if naming_method:
-            if upper:
-                example_text += 'A'
-            else:
-                example_text += 'a'
-        else:
-            example_text += (padding * '0') + '1'
-
-        if suffix:
-            example_text += '_%s' % suffix
-
-        self._renamer_lbl.setText('<font color=#646464>e.g. \'%s\'</font>' % example_text)
-
-    def _toggle_mult_naming_method(self, index):
-
-        """
-        Method that updates the status of the radio buttons considering which option es enabled
-        """
-
-        self._lower_radio.setVisible(index)
-        self._upper_radio.setVisible(index)
-        self._frame_pad_lbl.setVisible(not index)
-        self._frame_pad_spin.setVisible(not index)
-
-        self._update_example_rename()
+        self._update_current_objects_items()
 
     def _update_objects_names_list(self, nodes):
         """
@@ -576,11 +356,11 @@ class Renamer(window.MainWindow, object):
             discard_nodes.extend(tp.Dcc.list_nodes(node_type='transform'))
         if self._shapes_btn:
             if not self._shapes_btn.isChecked():
-                discard_nodes.extend(tp.Dcc.all_shapes_nodes(full_path=False))
+                discard_nodes.extend(tp.Dcc.all_shapes_nodes(full_path=True))
             else:
                 shape_nodes = list()
                 for obj in nodes:
-                    shapes = tp.Dcc.list_shapes(obj, full_path=False)
+                    shapes = tp.Dcc.list_shapes(obj, full_path=True)
                     if shapes:
                         shape_nodes.extend(shapes)
                 nodes.extend(shape_nodes)
@@ -590,38 +370,150 @@ class Renamer(window.MainWindow, object):
         for obj in nodes:
             if obj in discard_nodes:
                 continue
-            item = QTreeWidgetItem(self._names_list, [obj])
-            item.obj = obj
+            node_name = tp.Dcc.node_short_name(obj)
+            item = QTreeWidgetItem(self._names_list, [node_name])
+            item.obj = node_name
             item.preview_name = ''
+            item.full_name = obj
+            if tp.is_maya():
+                mobj = maya.OpenMaya.MObject()
+                sel = maya.OpenMaya.MSelectionList()
+                sel.add(obj)
+                sel.getDependNode(0, mobj)
+                item.handle = maya.OpenMaya.MObjectHandle(mobj)
+
             self._names_list.addTopLevelItem(item)
 
-    def _update_materials_names_list(self, nodes):
+    def _update_current_objects_items(self):
+        for i in range(self._names_list.topLevelItemCount()):
+            item = self._names_list.topLevelItem(i)
+            item.preview_name = ''
+            if hasattr(item, 'obj'):
+                item.setText(0, item.obj)
+
+        if self._preview_btn.isChecked():
+            selected_items = self._names_list.selectedItems()
+            self._set_preview_names(items=selected_items)
+
+    def _find_available_name(self, name, prefix=None, suffix=None, side='',  index=-1, padding=0, letters=False, capital=False, remove_first=0, remove_last=0, find_str=None, replace_str=None, joint_end=False):
         """
-        Internal function that updates name list with current scene objects
+        Recursively find a free name matching specified criteria
+        @param name: str, Name to check if already exists in the scene
+        @param suffix: str, Suffix for the name
+        @param index: int, Index of the name
+        @param padding: int, Padding for the characters/numbers
+        @param letters: bool, True if we want to use letters when renaming multiple nodes
+        @param capital: bool, True if we want letters to be capital
         """
 
-        pass
+        if prefix:
+            if side and side != '':
+                test_name = '{}_{}_{}'.format(prefix, side, name)
+            else:
+                test_name = '{}_{}'.format(prefix, name)
+        else:
+            if side and side != '':
+                test_name = '{}_{}'.format(side, name)
+            else:
+                test_name = name
 
-    def _update_layers_names_list(self, nodes):
+        if index >= 0:
+            if letters is True:
+                letter = strings.get_alpha(index, capital)
+                test_name = '{}_{}'.format(test_name, letter)
+            else:
+                test_name = '{}_{}'.format(test_name, str(index).zfill(padding+1))
+
+        if suffix:
+            test_name = '{}_{}'.format(test_name, suffix)
+
+        if remove_first and remove_first > 0:
+            test_name = test_name[remove_first:]
+
+        if remove_last and remove_last > 0:
+            test_name = test_name[:-remove_last]
+
+        if find_str != None and find_str != '' and replace_str != None:
+            test_name = test_name.replace(find_str, replace_str)
+
+        selected_items = self._names_list.selectedItems()
+        item_names = [item.obj for item in selected_items]
+
+        # if object exists, try next index
+        if tp.Dcc.object_exists(test_name) or test_name in item_names:
+            new_index = int(index) + 1
+            return self._find_available_name(
+                name, prefix=prefix, index=new_index, padding=padding,
+                letters=letters, capital=capital, remove_first=remove_first, remove_last=remove_last,
+                joint_end=joint_end, find_str=find_str, replace_str=replace_str
+            )
+
+        return test_name
+
+    def _generate_preview_names(self, items):
+
+        text, prefix, suffix, padding, naming_method, upper, side, remove_first, remove_last, joint_end = self.manual_rename_widget.get_rename_settings()
+        find_str, replace_str = self.manual_rename_widget.get_replace_settings()
+
+        duplicated_names = dict()
+        generated_names = list()
+
+        for item in items:
+            if not text:
+                base_name = item.obj
+            else:
+                base_name = text
+
+            if base_name == item.obj and not prefix and not suffix and not side:
+                generate_preview_name = False
+            else:
+                generate_preview_name = True
+            if base_name in duplicated_names:
+                duplicated_names[base_name] += 1
+            else:
+                duplicated_names[base_name] = 0
+
+            print('Generating preview name: {}'.format(generate_preview_name))
+
+            if generate_preview_name:
+
+                if base_name == item.obj and (prefix or suffix or side):
+                    index = None
+                else:
+                    index = duplicated_names[base_name]
+
+                preview_name = self._find_available_name(base_name, prefix=prefix, side=side, suffix=suffix,
+                                                         index=index, padding=padding,
+                                                         letters=naming_method, capital=upper, joint_end=joint_end,
+                                                         remove_first=remove_first, remove_last=remove_last,
+                                                         find_str=find_str, replace_str=replace_str)
+
+                while preview_name in generated_names:
+                    duplicated_names[base_name] += 1
+                    preview_name = self._find_available_name(base_name, prefix=prefix, side=side, suffix=suffix,
+                                              index=duplicated_names[base_name], padding=padding,
+                                              letters=naming_method, capital=upper, joint_end=joint_end,
+                                              remove_first=remove_first, remove_last=remove_last,
+                                              find_str=find_str, replace_str=replace_str)
+            else:
+                preview_name = base_name
+
+            item.preview_name = preview_name
+            generated_names.append(preview_name)
+
+    def _set_preview_names(self, items):
         """
-        Internal function that updates name list with current scene objects
+        Internal function that sets the preview name for the given items
+        :param items:
+        :return:
         """
 
-        pass
+        self._generate_preview_names(items)
 
-    def _update_assets_names_list(self, nodes):
-        """
-        Internal function that updates name list with current scene objects
-        """
-
-        pass
-
-    def _update_files_names_list(self, nodes):
-        """
-        Internal function that updates name list with current scene objects
-        """
-
-        pass
+        if self._preview_btn.isChecked():
+            for item in items:
+                if item.preview_name:
+                    item.setText(0, item.preview_name)
 
     def _on_filter_names_list(self, filter_text):
         """
@@ -650,9 +542,24 @@ class Renamer(window.MainWindow, object):
         Internal callback function that is triggered when the user selects an item in the names list
         """
 
-        items = self._names_list.selectedItems()
-        for item in items:
-            pass
+        selected_items = self._names_list.selectedItems()
+        item_names = [item.obj for item in selected_items]
+        if len(selected_items) > 0:
+            self._rename_btn.setText('Rename')
+            self._rename_btn.setEnabled(True)
+        else:
+            self._rename_btn.setText('Select objects in the list to rename ...')
+            self._rename_btn.setEnabled(False)
+
+        # We reset name to original value
+        for i in range(self._names_list.topLevelItemCount()):
+            item = self._names_list.topLevelItem(i)
+            if item.text(0) in item_names:
+                continue
+            if hasattr(item, 'obj'):
+                item.setText(0, item.obj)
+
+        self._set_preview_names(items=selected_items)
 
     def _on_select_all_clicked(self):
         for i in range(self._names_list.topLevelItemCount()):
@@ -671,215 +578,29 @@ class Renamer(window.MainWindow, object):
 
         self.auto_rename_widget.update_rules()
 
-    def _on_auto_rename(self):
-
-        rule_item = self._names_list.currentItem()
-        if not rule_item:
-            tpRenamer.logger.warning('Impossible to rename because currently selected naming rule is not valid!')
-            return
-
-        current_rule = nameit.NameIt.get_active_rule()
-        nameit.NameIt.set_active_rule(name=rule_item.rule.name)
-
-        values = dict()
-        for key, w in self._token_widgets.items():
-            if type(w) == list:
-                if isinstance(w[0], QComboBox):
-                    values[key] = w[0].currentText()
-            elif isinstance(w, QLineEdit):
-                values[key] = w.text()
-
-        if 'id' in values:
-            values.pop('id')
-
-        auto_name = nameit.NameIt.solve(**values)
-
-        if current_rule:
-            nameit.NameIt.set_active_rule(name=current_rule.name)
-
-        return self.auto_rename_nodes(auto_name=auto_name)
-    # endregion
-
-
-@undo_decorator
-def rename(nodes, text,
-           prefix=None,
-           suffix=None,
-           padding=0,
-           letters=False,
-           capital=False,
-           side='',
-           last_joint_is_end=False,
-           auto_rename=False):
-    """
-    Method that renames a group of nodes
-    @param nodes: list(str): Nodes to rename
-    @param text: str: New base name
-    @param prefix: str, Prefix for the nodes
-    @param suffix: str, Suffix for the nodes
-    @param padding: int, Padding for the characters/numbers
-    @param letters: bool, True if we want to use letters when renaming multiple nodes
-    @param capital: bool, True if we want letters to be capital
-    @param side: str, Side of the node
-    @param last_joint_is_end: bool, True if the last node is an end node
-    @param auto_rename: bool, True if we want to rename object using auto rename method
-    """
-
-    if prefix:
-        if side != '':
-            text = '%s_%s_%s' % (prefix, side, text)
-        else:
-            text = '%s_%s' % (prefix, text)
-
-    # if single node, try without letter or number
-    if len(nodes) == 1:
-
-        node = nodes[0]
-        new_name = text
-
-        if tp.Dcc.get_name() == tp.Dccs.Maya:
-            if new_name:
-                if 'none' in new_name:
-                    type_part = nameit.NameIt.parse_field_from_string(new_name, 'type')
-                    if type_part is None or (type_part and type_part == 'none'):
-                        from tpRigToolkit.maya.lib import node as node_lib
-
-                        types_dict = node_lib.get_node_types(node)
-                        node_type = types_dict[node][0]
-
-                        token_values = nameit.NamingData.get_tokens()
-                        found_value = None
-                        for token in token_values:
-                            if token.name == 'type':
-                                if node_type in token.values['key']:
-                                    index = int(token.values['key'].index(node_type))
-                                    found_value = token.values['value'][index]
-                                    break
-
-                        if found_value:
-                            new_name = new_name.replace('none', found_value)
-                        else:
-                            new_name = new_name.replace('none', types_dict[node][0])
-
-        if auto_rename:
-            if node == new_name:
-                return new_name
-        else:
-            if suffix:
-                new_name += '_' + suffix
-            if node == new_name:
-                return new_name
-
-        if tp.Dcc.get_name() == tp.Dccs.Maya:
-            if not maya.cmds.objExists(new_name):
-                try:
-                    maya.cmds.rename(node, new_name)
-                except RuntimeError:
-                    raise RenameException(node)
-                return new_name
-        else:
-            raise NotImplementedError()
-
-    # Rename nodes to tmp
-    new_node_names = []
-    failed_nodes = []
-    for i, node in enumerate(reversed(nodes)):
-        try:
-            new_node_names.insert(0, maya.cmds.rename(node, '__tmp__' + str(i)))
-        except RuntimeError:
-            failed_nodes.insert(0, node)
-
-    # Get new names
-    new_nodes = []
-    for node_name in new_node_names:
-
-        new_name = None
-        if auto_rename:
-            if 'none' in text:
-                type_part = nameit.NameIt.parse_field_from_string(text, 'type')
-                if type_part is None or (type_part and type_part == 'none'):
-                    from tpRigToolkit.maya.lib import node as node_lib
-
-                    types_dict = node_lib.get_node_types(node_name)
-                    node_type = types_dict[node_name][0]
-
-                    token_values = nameit.NamingData.get_tokens()
-                    found_value = None
-                    for token in token_values:
-                        if token.name == 'type':
-                            if node_type in token.values['key']:
-                                index = int(token.values['key'].index(node_type))
-                                found_value = token.values['value'][index]
-                                break
-
-                    if found_value:
-                        new_name = text.replace('none', found_value)
-                    else:
-                        new_name = text.replace('none', types_dict[node][0])
-
-            if new_name:
-                new_name = naming.FindUniqueName(new_name).get()
-            else:
-                new_name = naming.FindUniqueName(text).get()
-        else:
-            if tp.Dcc.get_name() == tp.Dccs.Maya:
-                new_name = naming.find_available_name(text, suffix, 1, padding, letters, capital)
-            else:
-                new_name = text
-
-        if not auto_rename:
-            if last_joint_is_end and node_name == new_node_names[-1]:
-                new_name += 'End'
-        try:
-            new_nodes.append(maya.cmds.rename(node_name, new_name))
-        except RuntimeError:
-            failed_nodes.append(node)
-
-    if failed_nodes:
-        raise RenameException(failed_nodes)
-
-    return new_nodes
-
-
-@undo_decorator
-def replace(nodes, find_text, replace_text):
-    if tp.Dcc.get_name() == tp.Dccs.Maya:
-        shapes = maya.cmds.ls(nodes, s=True)
-        shape_set = set(shapes)
-
-        new_nodes_names = [];
-        failed_nodes = []
-
-        for i, node in enumerate(reversed(nodes)):
-
-            if not find_text in node: continue
-            if node in shape_set:     continue
-
+    @undo_decorator
+    def _on_rename(self):
+        items_to_rename = self._names_list.selectedItems()
+        for item in items_to_rename:
             try:
-                new_nodes_names.append((node, maya.cmds.rename(node, '__tmp__' + str(i))))
-            except RuntimeError:
-                failed_nodes.append(node)
+                if hasattr(item, 'handle'):
+                    if tp.is_maya():
+                        mobj = item.handle.object()
+                        dag_path = maya.OpenMaya.MDagPath.getAPathTo(mobj)
+                        full_name = dag_path.fullPathName()
+                        tp.Dcc.rename_node(full_name, item.preview_name)
+                        item.obj = item.preview_name
+                        item.preview_name = ''
+                else:
+                    tp.Dcc.rename_node(item.full_name, item.preview_name)
+                    item.obj = item.preview_name
+                    item.preview_name = ''
+            except Exception as e:
+                tpRenamer.logger.warning('Impossible to rename: {} to {}'.format(item.full_name, item.preview_name))
+                tpRenamer.logger.error('{} | {}'.format(e, traceback.format_exc()))
 
-        for i, shape in enumerate(shapes):
-            if not find_text in shape: continue
-            if not maya.cmds.objExists(shape):
-                try:
-                    new_name = maya.cmds.rename(shape, shape.replace(find_text, '__tmp__' + str(i)))
-                    new_nodes_names.append((shape, new_name))
-                except RuntimeError:
-                    failed_nodes.append(node)
-
-        new_names = []
-
-        for name, new_node in new_nodes_names:
-            new_name = name.replace(find_text, replace_text)
-            if '|' in new_name:
-                new_name = new_name.split('|')[-1]
-            new_names.append(maya.cmds.rename(new_node, new_name))
-
-        return new_names
-    else:
-        raise NotImplementedError()
+        self.update_current_items()
+        self._names_list.clearSelection()
 
 
 def run():

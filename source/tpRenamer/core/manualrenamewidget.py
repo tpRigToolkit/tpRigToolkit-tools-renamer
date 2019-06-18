@@ -7,6 +7,7 @@ Widget that contains manual rename widgets for tpRenamer
 
 from __future__ import print_function, division, absolute_import
 
+from tpQtLib.Qt.QtCore import *
 from tpQtLib.Qt.QtWidgets import *
 
 from tpQtLib.core import base
@@ -15,6 +16,10 @@ from tpRenamer.widgets import renamerwidget, replacerwidget
 
 
 class ManualRenameWidget(base.BaseWidget, object):
+
+    renameUpdate = Signal()
+    replaceUpdate = Signal()
+
     def __init__(self, parent=None):
         super(ManualRenameWidget, self).__init__(parent=parent)
 
@@ -34,4 +39,22 @@ class ManualRenameWidget(base.BaseWidget, object):
         # self._select_hierarchy_btn = QPushButton('Select Hierarchy')
         # extra_layout.addWidget(self._select_hierarchy_btn)
 
+    def setup_signals(self):
+        self._renamer_widget.renameUpdate.connect(self.renameUpdate.emit)
+        self._replacer_widget.replaceUpdate.connect(self.replaceUpdate.emit)
 
+    def get_rename_settings(self):
+        """
+        Internal function that returns current rename settings
+        :return: str, str, str, int, bool, bool, str, bool
+        """
+
+        return self._renamer_widget.get_rename_settings()
+
+    def get_replace_settings(self):
+        """
+        Internal function that returns current replace settings
+        :return: str, str, str, int, bool, bool, str, bool
+        """
+
+        return self._replacer_widget.get_replace_settings()
