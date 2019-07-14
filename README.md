@@ -1,20 +1,46 @@
 # tpRenamer
-Renamer Tool for Maya with multiple renaming options
 
-![](http://cgart3d.com/wp-content/uploads/2017/08/tpRenamer.png)
+Renamer Tool to easily rename DCC objects in a visual way
 
-Features
-=========================================================
-* Rename funcionality with multiple options
-* Preview of the final naming result
-* Search/Replace functionality
-* Add prefix/suffix
+## Dependencies
+* **tpPyUtils**: https://github.com/tpoveda/tpPyUtils
+* **tpDccLib**: https://github.com/tpoveda/tpDccLib
+* **tpQtLib**: https://github.com/tpoveda/tpQtLib
 
-Installation
-=========================================================
-Copy tpRenamer.py file into your Documents/Maya/(Version)/scripts folder and execute this code in Maya command panel
+Depending on the DCC you are going to use you will need to download and install one of the following repositories:
+* **3ds Max**: https://github.com/tpoveda/tpMaxLib
+* **Maya**: https://github.com/tpoveda/tpMayaLib
+* **Houdini**: *Work in Progress*
+* **Nuke**: *Work in Progress*
+* **Blender**: *Work in Progress*
 
-``` python
+To use the auto rename feature you will need to clone/download and install following the instructions tpNameIt module:
+* **tpNameIt**: https://github.com/tpoveda/tpNameIt
+
+## Installation
+### Manual
+1. Clone/Download tpRenamer dependencies Python packages and follow instructions to install them.
+2. Clone/Download tpRenamer anywhere in your PC (If you download the repo, you will need to extract
+the contents of the .zip file).
+3. Copy **tpRenamer** folder located inside **source** folder in a path added to **sys.path**
+
+### Automatic
+Automatic installation for tpRenamer is not finished yet.
+
+## Usage
+
+### Initialization Code
+```python
+import tpPyUtils
+tpPyUtils.init()
+
+import tpDccLib
+tpDccLib.init()
+
+import tpQtLib
+tpQtLib.init()
+
 import tpRenamer
-reload(tpRenamer)
+tpRenamer.run()
 ```
+

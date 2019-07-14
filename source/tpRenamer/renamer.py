@@ -8,7 +8,6 @@ Fully featured renamer tool
 from __future__ import print_function, division, absolute_import
 
 import traceback
-from collections import OrderedDict
 
 from tpQtLib.Qt.QtCore import *
 from tpQtLib.Qt.QtWidgets import *
@@ -17,7 +16,7 @@ import tpRenamer
 import tpQtLib
 import tpDccLib as tp
 from tpPyUtils import decorators, strings
-from tpQtLib.core import window, qtutils
+from tpQtLib.core import window
 from tpQtLib.widgets import splitters, search, button
 from tpRenamer.core import manualrenamewidget, autorenamewidget
 
