@@ -7,8 +7,8 @@ Widget that contains manual rename widgets for tpRenamer
 
 from __future__ import print_function, division, absolute_import
 
-from tpQtLib.Qt.QtCore import *
-from tpQtLib.Qt.QtWidgets import *
+from Qt.QtCore import *
+from Qt.QtWidgets import *
 
 from tpQtLib.core import base
 
