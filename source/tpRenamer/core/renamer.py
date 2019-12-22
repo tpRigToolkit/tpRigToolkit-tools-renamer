@@ -13,7 +13,6 @@ from functools import partial
 from Qt.QtCore import *
 from Qt.QtWidgets import *
 
-import tpRenamer
 import tpDccLib as tp
 from tpPyUtils import decorators, strings
 from tpQtLib.core import base, window
@@ -25,6 +24,10 @@ if tp.is_maya():
     undo_decorator = maya_decorators.undo
 else:
     undo_decorator = decorators.empty_decorator
+
+from tpNameIt.core import namelib
+
+import tpRenamer
 
 
 class Renamer(window.MainWindow, object):
@@ -49,7 +52,11 @@ class Renamer(window.MainWindow, object):
 
 
 class RenamerWidget(base.BaseWidget, object):
+
+    NAMING_LIB = namelib.NameLib
+
     def __init__(self, config=None, parent=None):
+        self._name_lib = self.NAMING_LIB()
         self._config = config or tpRenamer.configs_manager.get_config('renamer')
         super(RenamerWidget, self).__init__(parent=parent)
 
@@ -105,7 +112,7 @@ class RenamerWidget(base.BaseWidget, object):
         self._splitter.addWidget(self.rename_tab)
 
         self.manual_rename_widget = manualrenamewidget.ManualRenameWidget()
-        self.auto_rename_widget = autorenamewidget.AutoRenameWidget()
+        self.auto_rename_widget = autorenamewidget.AutoRenameWidget(naming_lib=self._name_lib)
 
         self.rename_tab.addTab(self.manual_rename_widget, 'Manual')
         self.rename_tab.addTab(self.auto_rename_widget, 'Auto')
@@ -141,6 +148,7 @@ class RenamerWidget(base.BaseWidget, object):
         self._hierarchy_cbx.toggled.connect(self._on_toggle_hierarchy_cbx)
         self.manual_rename_widget.renameUpdate.connect(self.update_current_items)
         self.manual_rename_widget.replaceUpdate.connect(self.update_current_items)
+        self.auto_rename_widget.renameUpdated.connect(self.update_current_items)
 
     def keyPressEvent(self, event):
 
@@ -229,7 +237,7 @@ class RenamerWidget(base.BaseWidget, object):
             selected_items = names_list.selectedItems()
             self._set_preview_names(items=selected_items)
 
-    def _find_available_name(self, items, name, prefix=None, suffix=None, side='',  index=-1, padding=0, letters=False, capital=False, remove_first=0, remove_last=0, find_str=None, replace_str=None, joint_end=False):
+    def _find_manual_available_name(self, items, name, prefix=None, suffix=None, side='', index=-1, padding=0, letters=False, capital=False, remove_first=0, remove_last=0, find_str=None, replace_str=None, joint_end=False):
         """
         Recursively find a free name matching specified criteria
         @param name: str, Name to check if already exists in the scene
@@ -275,7 +283,7 @@ class RenamerWidget(base.BaseWidget, object):
         # if object exists, try next index
         if tp.Dcc.object_exists(test_name) or test_name in item_names:
             new_index = int(index) + 1
-            return self._find_available_name(
+            return self._find_manual_available_name(
                 items, name, prefix=prefix, index=new_index, padding=padding,
                 letters=letters, capital=capital, remove_first=remove_first, remove_last=remove_last,
                 joint_end=joint_end, find_str=find_str, replace_str=replace_str
@@ -285,52 +293,66 @@ class RenamerWidget(base.BaseWidget, object):
 
     def _generate_preview_names(self, items):
 
-        text, prefix, suffix, padding, naming_method, upper, side, remove_first, remove_last, joint_end = self.manual_rename_widget.get_rename_settings()
-        find_str, replace_str = self.manual_rename_widget.get_replace_settings()
+        # Manual Rename
+        if self.rename_tab.currentIndex() == 0:
 
-        duplicated_names = dict()
-        generated_names = list()
+            text, prefix, suffix, padding, naming_method, upper, side, remove_first, remove_last, joint_end = self.manual_rename_widget.get_rename_settings()
+            find_str, replace_str = self.manual_rename_widget.get_replace_settings()
 
-        for item in items:
-            if not text:
-                base_name = item.obj
-            else:
-                base_name = text
+            duplicated_names = dict()
+            generated_names = list()
 
-            if base_name == item.obj and not prefix and not suffix and not side:
-                generate_preview_name = False
-            else:
-                generate_preview_name = True
-            if base_name in duplicated_names:
-                duplicated_names[base_name] += 1
-            else:
-                duplicated_names[base_name] = 0
-
-            if generate_preview_name:
-
-                if base_name == item.obj and (prefix or suffix or side):
-                    index = None
+            for item in items:
+                if not text:
+                    base_name = item.obj
                 else:
-                    index = duplicated_names[base_name]
+                    base_name = text
 
-                preview_name = self._find_available_name(items, base_name, prefix=prefix, side=side, suffix=suffix,
-                                                         index=index, padding=padding,
-                                                         letters=naming_method, capital=upper, joint_end=joint_end,
-                                                         remove_first=remove_first, remove_last=remove_last,
-                                                         find_str=find_str, replace_str=replace_str)
-
-                while preview_name in generated_names:
+                if base_name == item.obj and not prefix and not suffix and not side:
+                    generate_preview_name = False
+                else:
+                    generate_preview_name = True
+                if base_name in duplicated_names:
                     duplicated_names[base_name] += 1
-                    preview_name = self._find_available_name(items, base_name, prefix=prefix, side=side, suffix=suffix,
-                                              index=duplicated_names[base_name], padding=padding,
-                                              letters=naming_method, capital=upper, joint_end=joint_end,
-                                              remove_first=remove_first, remove_last=remove_last,
-                                              find_str=find_str, replace_str=replace_str)
-            else:
-                preview_name = base_name
+                else:
+                    duplicated_names[base_name] = 0
 
-            item.preview_name = preview_name
-            generated_names.append(preview_name)
+                if generate_preview_name:
+
+                    if base_name == item.obj and (prefix or suffix or side):
+                        index = None
+                    else:
+                        index = duplicated_names[base_name]
+
+                    preview_name = self._find_manual_available_name(items, base_name, prefix=prefix, side=side, suffix=suffix,
+                                                                    index=index, padding=padding,
+                                                                    letters=naming_method, capital=upper, joint_end=joint_end,
+                                                                    remove_first=remove_first, remove_last=remove_last,
+                                                                    find_str=find_str, replace_str=replace_str)
+
+                    while preview_name in generated_names:
+                        duplicated_names[base_name] += 1
+                        preview_name = self._find_manual_available_name(items, base_name, prefix=prefix, side=side, suffix=suffix,
+                                                                        index=duplicated_names[base_name], padding=padding,
+                                                                        letters=naming_method, capital=upper, joint_end=joint_end,
+                                                                        remove_first=remove_first, remove_last=remove_last,
+                                                                        find_str=find_str, replace_str=replace_str)
+                else:
+                    preview_name = base_name
+
+                item.preview_name = preview_name
+                generated_names.append(preview_name)
+        else:
+            duplicated_names = dict()
+            generated_names = list()
+
+            data = self.auto_rename_widget.get_rename_settings()
+
+            for i, item in enumerate(items):
+                data['id'] = i
+                preview_name = self._name_lib.solve(**data)
+                item.preview_name = preview_name
+                generated_names.append(preview_name)
 
     def _set_preview_names(self, items, do_preview=True):
         """

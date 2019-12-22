@@ -44,7 +44,7 @@ class ManualRenameWidget(base.BaseWidget, object):
 
     def get_rename_settings(self):
         """
-        Internal function that returns current rename settings
+        Function that returns current rename settings
         :return: str, str, str, int, bool, bool, str, bool
         """
 
@@ -52,7 +52,7 @@ class ManualRenameWidget(base.BaseWidget, object):
 
     def get_replace_settings(self):
         """
-        Internal function that returns current replace settings
+        Function that returns current replace settings
         :return: str, str, str, int, bool, bool, str, bool
         """
 

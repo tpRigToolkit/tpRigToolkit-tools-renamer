@@ -8,6 +8,7 @@ Widget that contains auto rename widgets for tpRenamer
 from __future__ import print_function, division, absolute_import
 
 import traceback
+from functools import partial
 from collections import OrderedDict
 
 from Qt.QtCore import *
@@ -16,13 +17,15 @@ from Qt.QtWidgets import *
 from tpQtLib.core import base, qtutils
 from tpQtLib.widgets import buttons
 
-from tpNameIt.core import nameit
-
 import tpRenamer
 
 
 class AutoRenameWidget(base.BaseWidget, object):
-    def __init__(self, parent=None):
+
+    renameUpdated = Signal()
+
+    def __init__(self, naming_lib, parent=None):
+        self._naming_lib = naming_lib
         super(AutoRenameWidget, self).__init__(parent=parent)
 
         self._token_widgets = dict()
@@ -76,7 +79,6 @@ class AutoRenameWidget(base.BaseWidget, object):
 
         auto_w = QWidget()
         self.auto_l = QVBoxLayout()
-        # self.auto_l.setAlignment(Qt.AlignTop)
         auto_w.setLayout(self.auto_l)
         auto_w.setMinimumWidth(200)
         main_splitter.addWidget(auto_w)
@@ -86,6 +88,21 @@ class AutoRenameWidget(base.BaseWidget, object):
 
     def setup_signals(self):
         self.edit_btn.clicked.connect(self._on_open_naming_manager)
+        self.rules_list.itemSelectionChanged.connect(self._on_item_selection_changed)
+
+    def get_rename_settings(self):
+        rename_settings = dict()
+
+        if not self._token_widgets:
+            return rename_settings
+
+        for token_name, widget in self._token_widgets.items():
+            if isinstance(widget, list):
+                rename_settings[token_name] = widget[0].currentText()
+            elif isinstance(widget, QLineEdit):
+                rename_settings[token_name] = widget.text()
+
+        return rename_settings
 
     def add_token(self, token_name, line_layout):
         self.main_auto_layout.addRow(token_name, line_layout)
@@ -96,9 +113,9 @@ class AutoRenameWidget(base.BaseWidget, object):
         try:
             self.rules_list.clear()
             item_to_select = None
-            current_rule = nameit.NameIt.get_active_rule()
-            qtutils.clear_layout(self.auto_l)
-            rules = nameit.NameItLib().rules
+            current_rule = self._naming_lib.active_rule()
+            qtutils.clear_layout(self.main_auto_layout)
+            rules = self._naming_lib.rules
             for rule in rules:
                 item = QTreeWidgetItem(self.rules_list, [rule.name])
                 item.rule = rule
@@ -124,12 +141,12 @@ class AutoRenameWidget(base.BaseWidget, object):
         if not rule_item:
             return
 
-        current_rule = nameit.NameIt.get_active_rule()
-        nameit.NameIt.set_active_rule(name=rule_item.rule.name)
-        rule_tokens = nameit.NameItLib().tokens
+        current_rule = self._naming_lib.active_rule()
+        self._naming_lib.set_active_rule(name=rule_item.rule.name)
+        rule_tokens = self._naming_lib.tokens
 
         active_tokens = list()
-        active_rule = nameit.NameIt.get_active_rule()
+        active_rule = self._naming_lib.active_rule()
         for field in active_rule.fields():
             for token in rule_tokens:
                 if token.name == field:
@@ -139,7 +156,7 @@ class AutoRenameWidget(base.BaseWidget, object):
 
         for token in reversed(active_tokens):
             token_name = token.name
-            token_value = token.get_values_as_keyword()
+            token_value = token.get_items()
             token_default = token.default
 
             if token_name == 'id':
@@ -156,17 +173,50 @@ class AutoRenameWidget(base.BaseWidget, object):
                     if key == 'default':
                         continue
                     w.addItem(key)
-                if token_default > 0:
-                    w.setCurrentIndex(token_default-1)
+                try:
+                    if token_default > 0:
+                        w.setCurrentIndex(token_default-1)
+                except Exception:
+                    w.setCurrentIndex(0)
+                current_text = w.currentText()
+                try:
+                    current_value = token.solve(self._naming_lib.active_rule(), current_text)
+                    w_l.setText(str(current_value))
+                except Exception:
+                    pass
+                w.currentTextChanged.connect(partial(self._on_combo_changed, token))
             else:
                 w = QLineEdit(self)
+                w.textChanged.connect(self._on_text_changed)
                 w.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
                 self._token_widgets[token_name] = w
                 self.add_token(token_name, qtutils.get_line_layout('', self, w))
 
         if current_rule:
-            nameit.NameIt.set_active_rule(current_rule.name)
+            self._naming_lib.set_active_rule(current_rule.name)
+
+    def _on_combo_changed(self, token, text):
+        token_name = token.name
+        if token_name not in self._token_widgets:
+            return
+        token_widgets = self._token_widgets[token_name]
+        try:
+            current_value = token.solve(self._naming_lib.active_rule(), text)
+            token_widgets[1].setText(str(current_value))
+        except Exception:
+            pass
+        self.renameUpdated.emit()
+
+    def _on_text_changed(self, text):
+        self.renameUpdated.emit()
 
     def _on_open_naming_manager(self):
+        from tpNameIt.core import nameit
         win = nameit.run()
         return win
+
+    def _on_item_selection_changed(self):
+        current_item = self.rules_list.currentItem()
+        current_rule = current_item.rule
+        self._naming_lib.set_active_rule(current_rule.name)
+        self._on_change_name_rule()
