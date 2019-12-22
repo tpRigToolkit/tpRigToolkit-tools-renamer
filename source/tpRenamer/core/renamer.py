@@ -343,16 +343,12 @@ class RenamerWidget(base.BaseWidget, object):
                 item.preview_name = preview_name
                 generated_names.append(preview_name)
         else:
-            duplicated_names = dict()
-            generated_names = list()
-
             data = self.auto_rename_widget.get_rename_settings()
 
             for i, item in enumerate(items):
                 data['id'] = i
                 preview_name = self._name_lib.solve(**data)
                 item.preview_name = preview_name
-                generated_names.append(preview_name)
 
     def _set_preview_names(self, items, do_preview=True):
         """
