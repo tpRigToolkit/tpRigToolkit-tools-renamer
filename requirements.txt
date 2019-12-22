@@ -1,0 +1,9 @@
+# ===================================================================
+# tpRenamer requirements file
+# ===================================================================
+pyyaml
+lucidity
+tpPyUtils
+tpDccLib
+tpQtLib
+tpNameIt
