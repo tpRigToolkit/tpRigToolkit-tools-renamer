@@ -16,7 +16,7 @@ from Qt.QtWidgets import *
 import tpRenamer
 import tpDccLib as tp
 from tpPyUtils import decorators, strings
-from tpQtLib.core import window
+from tpQtLib.core import base, window
 from tpQtLib.widgets import splitters, stack
 
 if tp.is_maya():
@@ -29,10 +29,6 @@ else:
 
 class Renamer(window.MainWindow, object):
     def __init__(self):
-
-        self._sel_objs = None
-        self._config = tpRenamer.configs_manager.get_config('renamer')
-
         super(Renamer, self).__init__(
             name='RenamerBaseWindow',
             title='Renamer',
@@ -46,10 +42,23 @@ class Renamer(window.MainWindow, object):
         self.setWindowIcon(tpRenamer.resource.icon('rename'))
 
     def ui(self):
+        super(Renamer, self).ui()
+
+        self._renamer_widget = RenamerWidget()
+        self.main_layout.addWidget(self._renamer_widget)
+
+
+class RenamerWidget(base.BaseWidget, object):
+    def __init__(self, config=None, parent=None):
+        self._config = config or tpRenamer.configs_manager.get_config('renamer')
+        super(RenamerWidget, self).__init__(parent=parent)
+
+    def ui(self):
+        super(RenamerWidget, self).ui()
 
         from tpRenamer.widgets import manualrenamewidget, autorenamewidget
 
-        super(Renamer, self).ui()
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self._top_layout = QHBoxLayout()
         self._top_layout.setAlignment(Qt.AlignLeft)
@@ -89,6 +98,7 @@ class Renamer(window.MainWindow, object):
         selection_layout.addWidget(self._hierarchy_cbx)
 
         self._splitter = QSplitter(Qt.Horizontal)
+        self._splitter.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.main_layout.addWidget(self._splitter)
 
         self.rename_tab = QTabWidget()
@@ -124,11 +134,8 @@ class Renamer(window.MainWindow, object):
         self._setup_categories()
 
     def setup_signals(self):
-
         self._stack.animFinished.connect(self._on_stack_anim_finished)
-
-        # self.rename_tab.currentChanged.connect(self._on_tab_changed)
-
+        self.rename_tab.currentChanged.connect(self._on_tab_changed)
         self._all_radio.clicked.connect(self._on_refresh_category)
         self._selected_radio.clicked.connect(self._on_refresh_category)
         self._hierarchy_cbx.toggled.connect(self._on_toggle_hierarchy_cbx)
