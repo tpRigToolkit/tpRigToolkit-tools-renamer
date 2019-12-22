@@ -33,7 +33,7 @@ Manual
 
 Automatic
 ~~~~~~~~~~~~~~~~~~~~~~
-Automatic installation for tpNameIt is not finished yet.
+Automatic installation for tpRenamer is not finished yet.
 
 Usage
 -------------------
@@ -51,6 +51,9 @@ Initialization Code
 
     import tpQtLib
     tpQtLib.init()
+
+    import tpNameIt
+    tpNameIt.init()
 
     import tpRenamer
     tpRenamer.run()
