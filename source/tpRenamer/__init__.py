@@ -17,6 +17,7 @@ from tpQtLib.core import resource as resource_utils
 
 logger = None
 resource = None
+configs_manager = None
 
 # =================================================================================
 
@@ -26,8 +27,8 @@ class tpRenamerResource(resource_utils.Resource, object):
 
 
 class tpRenamer(importer.Importer, object):
-    def __init__(self):
-        super(tpRenamer, self).__init__(module_name='tpRenamer')
+    def __init__(self, *args, **kwargs):
+        super(tpRenamer, self).__init__(module_name='tpRenamer', *args, **kwargs)
 
     def get_module_path(self):
         """
@@ -49,14 +50,32 @@ class tpRenamer(importer.Importer, object):
 
         return mod_dir
 
+    def get_configs_path(self):
+        """
+        Returns path where base tpNodeGraph configurations are located
+        :return: str
+        """
 
-def init(do_reload=False):
+        return os.path.join(self.get_module_path(), 'configs')
+
+    def create_configuration_manager(self):
+        """
+        Creates manager that handles tpNodeGraph configuration
+        :return:
+        """
+
+        from tpQtLib.core import config
+        global configs_manager
+        configs_manager = config.ConfigurationManager(config_paths=self.get_configs_path())
+
+
+def init(do_reload=False, dev=False):
     """
     Initializes module
     :param do_reload: bool, Whether to reload modules or not
     """
 
-    tprenamer_importer = importer.init_importer(importer_class=tpRenamer, do_reload=do_reload)
+    tprenamer_importer = importer.init_importer(importer_class=tpRenamer, do_reload=do_reload, debug=dev)
 
     global logger
     global resource
@@ -65,10 +84,14 @@ def init(do_reload=False):
 
     tprenamer_importer.import_modules()
     tprenamer_importer.import_packages(only_packages=True)
+    if do_reload:
+        tprenamer_importer.reload_all()
+
+    tprenamer_importer.create_configuration_manager()
 
 
 def run(do_reload=False):
     init(do_reload=do_reload)
-    from tpRenamer import renamer
+    from tpRenamer.core import renamer
     win = renamer.run()
     return win
