@@ -13,7 +13,7 @@ from Qt.QtWidgets import *
 from Qt.QtGui import *
 
 from tpQtLib.core import base
-from tpQtLib.widgets import splitters, expandables
+from tpQtLib.widgets import splitters
 
 
 class ReplacerWidget(base.BaseWidget, object):
