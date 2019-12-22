@@ -38,10 +38,6 @@ categories:
       types:
         - Lights:
             type: light
-  - files:
-      title: Files
-      icon: file
-      types: {}
 
 # List of DCC nodes that should be discarded during renaming process
 nodes_to_discard: ['persp', 'top', 'front', 'side', 'defaultLayer']

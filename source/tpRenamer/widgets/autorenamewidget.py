@@ -31,6 +31,7 @@ class AutoRenameWidget(base.BaseWidget, object):
         super(AutoRenameWidget, self).ui()
 
         main_splitter = QSplitter(Qt.Horizontal)
+        main_splitter.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         self.main_layout.addWidget(main_splitter)
 
         auto_widget = QWidget()
@@ -167,9 +168,5 @@ class AutoRenameWidget(base.BaseWidget, object):
             nameit.NameIt.set_active_rule(current_rule.name)
 
     def _on_open_naming_manager(self):
-        if not NAMING_IT_AVAILABLE:
-            return
-
         win = nameit.run()
-
         return win
