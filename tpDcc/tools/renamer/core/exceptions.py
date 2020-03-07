@@ -7,7 +7,7 @@ Module that contains exceptions used by tpRenamer
 
 from __future__ import print_function, division, absolute_import
 
-import tpDccLib as tp
+import tpDcc as tp
 
 
 class RenameException(Exception):
