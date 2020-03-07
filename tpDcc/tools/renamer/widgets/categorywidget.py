@@ -10,13 +10,12 @@ from __future__ import print_function, division, absolute_import
 from Qt.QtCore import *
 from Qt.QtWidgets import *
 
-import tpQtLib
-import tpDccLib as tp
-from tpQtLib.core import base
-from tpQtLib.widgets import search, buttons, splitters
+import tpDcc as tp
+from tpDcc.libs.qt.core import base
+from tpDcc.libs.qt.widgets import search, buttons, splitters
 
 if tp.is_maya():
-    import tpMayaLib as maya
+    import tpDcc.dccs.maya as maya
 
 
 class CategoryWidget(base.BaseWidget, object):
@@ -51,7 +50,7 @@ class CategoryWidget(base.BaseWidget, object):
         filter_layout.setContentsMargins(10, 0, 10, 0)
         filter_layout.setSpacing(2)
         self.main_layout.addLayout(filter_layout)
-        refresh_icon = tpQtLib.resource.icon('refresh')
+        refresh_icon = tp.ResourcesMgr().icon('refresh')
         self._refresh_list_btn = buttons.IconButton(
             icon=refresh_icon, icon_padding=2, button_style=buttons.ButtonStyles.FlatStyle)
         self._names_filter = search.SearchFindWidget()
@@ -82,7 +81,7 @@ class CategoryWidget(base.BaseWidget, object):
         bottom_buttons_layout.setSpacing(2)
         self.main_layout.addLayout(bottom_buttons_layout)
 
-        preview_icon = tpQtLib.resource.icon('preview')
+        preview_icon = tp.ResourcesMgr().icon('preview')
         self._sort_btn = QPushButton('Sort')
         self._sort_btn.setMinimumWidth(40)
         self._all_btn = QPushButton('All')

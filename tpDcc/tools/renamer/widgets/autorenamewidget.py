@@ -14,10 +14,11 @@ from collections import OrderedDict
 from Qt.QtCore import *
 from Qt.QtWidgets import *
 
-from tpQtLib.core import base, qtutils
-from tpQtLib.widgets import buttons
+import tpDcc
+from tpDcc.libs.qt.core import base, qtutils
+from tpDcc.libs.qt.widgets import buttons
 
-import tpRenamer
+from tpDcc.tools import renamer
 
 
 class AutoRenameWidget(base.BaseWidget, object):
@@ -42,7 +43,7 @@ class AutoRenameWidget(base.BaseWidget, object):
         auto_widget.setLayout(auto_layout)
         main_splitter.addWidget(auto_widget)
 
-        edit_icon = tpRenamer.resource.icon('edit', extension='png')
+        edit_icon = tpDcc.ResourcesMgr().icon('edit', extension='png')
         self.edit_btn = buttons.IconButton(icon=edit_icon, icon_padding=2, button_style=buttons.ButtonStyles.FlatStyle)
         self.rules_list = QTreeWidget(self)
         self.rules_list.setHeaderHidden(True)
@@ -127,7 +128,7 @@ class AutoRenameWidget(base.BaseWidget, object):
             if item_to_select:
                 self.rules_list.setItemSelected(item_to_select, True)
         except Exception as e:
-            tpRenamer.logger.error('{} | {}'.format(e, traceback.format_exc()))
+            renamer.logger.error('{} | {}'.format(e, traceback.format_exc()))
         finally:
             self.rules_list.blockSignals(False)
 
