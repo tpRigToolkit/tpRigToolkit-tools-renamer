@@ -1,9 +1,10 @@
 # ===================================================================
-# tpRenamer requirements file
+# tpDcc-tools-renamer requirements file
 # ===================================================================
 pyyaml
 lucidity
-tpPyUtils
-tpDccLib
-tpQtLib
-tpNameIt
+tpDcc-libs-python
+tpDcc-core
+tpDcc-libs-qt
+tpDcc-libs-nameit
+tpDcc-tools-nameit

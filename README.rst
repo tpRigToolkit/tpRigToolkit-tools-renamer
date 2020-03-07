@@ -1,59 +1,22 @@
-tpRenamer
+tpDcc-tools-renamer
 ============================================================
-
-.. image:: https://img.shields.io/github/license/tpoveda/tpRenamer.svg
-    :target: https://github.com/tpoveda/tpRenamer/blob/master/LICENSE
 
 Renamer Tool to easily rename DCC objects in a visual way
 
-Dependencies
--------------------
+.. image:: https://travis-ci.com/tpDcc/tpDcc-tools-renamer.svg?branch=master&kill_cache=1
+    :target: https://travis-ci.com/tpDcc/tpDcc-tools-renamer
 
-* **tpPyUtils**: https://github.com/tpoveda/tpPyUtils
-* **tpDccLib**: https://github.com/tpoveda/tpDccLib
-* **tpQtLib**: https://github.com/tpoveda/tpQtLib
+.. image:: https://coveralls.io/repos/github/tpDcc/tpDcc-tools-renamer/badge.svg?branch=master&kill_cache=1
+    :target: https://coveralls.io/github/tpDcc/tpDcc-tools-renamer?branch=master
 
-Depending on the DCC you are going to use you will need to download and install one of the following repositories:
+.. image:: https://img.shields.io/badge/docs-sphinx-orange
+    :target: https://tpDcc.github.io/tpDcc-tools-renamer
 
-* **3ds Max**: https://github.com/tpoveda/tpMaxLib
-* **Maya**: https://github.com/tpoveda/tpMayaLib
-* **Houdini**: *Work in Progress*
-* **Nuke**: *Work in Progress*
-* **Blender**: *Work in Progress*
+.. image:: https://img.shields.io/github/license/tpDcc/tpDcc-tools-renamer
+    :target: https://github.com/tpDcc/tpDcc-tools-renamer/blob/master/LICENSE
 
-Installation
--------------------
+.. image:: https://img.shields.io/pypi/v/tpDcc-tools-renamer?branch=master&kill_cache=1
+    :target: https://pypi.org/project/tpDcc-tools-renamer
 
-Manual
-~~~~~~~~~~~~~~~~~~~~~~
-
-1. Clone/Download tpRenamer dependencies Python packages and follow instructions to install them.
-2. Clone/Download tpRenamer anywhere in your PC (If you download the repo, you will need to extract the contents of the .zip file).
-3. Copy **tpRenamer** folder located inside **source** folder in a path added to **sys.path**
-
-Automatic
-~~~~~~~~~~~~~~~~~~~~~~
-Automatic installation for tpRenamer is not finished yet.
-
-Usage
--------------------
-
-Initialization Code
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: python
-
-    import tpPyUtils
-    tpPyUtils.init()
-
-    import tpDccLib
-    tpDccLib.init()
-
-    import tpQtLib
-    tpQtLib.init()
-
-    import tpNameIt
-    tpNameIt.init()
-
-    import tpRenamer
-    tpRenamer.run()
+.. image:: https://img.shields.io/badge/code_style-pep8-blue
+    :target: https://www.python.org/dev/peps/pep-0008/
