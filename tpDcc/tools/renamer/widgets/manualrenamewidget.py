@@ -8,10 +8,11 @@ Widget that contains manual rename widgets for tpRenamer
 from __future__ import print_function, division, absolute_import
 
 from Qt.QtCore import *
+from Qt.QtWidgets import *
 
 import tpDcc
 from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import accordion
+from tpDcc.libs.qt.widgets import accordion, splitters
 
 from tpDcc.tools.renamer.widgets import renamerwidget, replacerwidget, prefixsuffixwidget, numbersidewidget
 from tpDcc.tools.renamer.widgets import namespacewidget, utilswidget
@@ -21,7 +22,7 @@ class ManualRenameWidget(base.BaseWidget, object):
 
     renameUpdate = Signal()
     replaceUpdate = Signal()
-    doRename = Signal(str)
+    doName = Signal(str)
     doSearchReplace = Signal(str, str)
     doAddPrefix = Signal(str)
     doRemovePrefix = Signal()
@@ -39,6 +40,7 @@ class ManualRenameWidget(base.BaseWidget, object):
     doUniqueName = Signal()
     doRemoveAllNumbers = Signal()
     doRemoveTailNumbers = Signal()
+    doRename = Signal()
     
     def __init__(self, parent=None):
         super(ManualRenameWidget, self).__init__(parent=parent)
@@ -66,9 +68,14 @@ class ManualRenameWidget(base.BaseWidget, object):
         manual_accordion.add_item('Search & Replace', self._replacer_widget)
         manual_accordion.add_item('Utils', self._utils_widget)
 
+        self._rename_btn = QPushButton('Rename')
+        self._rename_btn.setIcon(tpDcc.ResourcesMgr().icon('rename'))
+        self.main_layout.addLayout(splitters.SplitterLayout())
+        self.main_layout.addWidget(self._rename_btn)
+
     def setup_signals(self):
         self._renamer_widget.renameUpdate.connect(self.renameUpdate.emit)
-        self._renamer_widget.doRename.connect(self.doRename.emit)
+        self._renamer_widget.doName.connect(self.doName.emit)
         self._prefix_suffix_widget.renameUpdate.connect(self.renameUpdate.emit)
         self._number_side_widget.renameUpdate.connect(self.renameUpdate.emit)
         if self._namespace_widget:
@@ -91,6 +98,7 @@ class ManualRenameWidget(base.BaseWidget, object):
         self._utils_widget.doUniqueName.connect(self.doUniqueName.emit)
         self._utils_widget.doRemoveAllNumbers.connect(self.doRemoveAllNumbers.emit)
         self._utils_widget.doRemoveTailNumbers.connect(self.doRemoveTailNumbers.emit)
+        self._rename_btn.clicked.connect(self.doRename.emit)
 
     def get_rename_settings(self):
         """

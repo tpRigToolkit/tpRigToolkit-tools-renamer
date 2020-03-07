@@ -191,6 +191,8 @@ class NumberSideWidget(base.BaseWidget, object):
         self._frame_pad_spin.setEnabled(flag)
         self._frame_combo.setEnabled(flag)
         self._frame_btn.setEnabled(flag)
+        self._lower_radio.setEnabled(flag)
+        self._upper_radio.setEnabled(flag)
 
     def _on_toggle_mult_naming_method(self, index):
         """

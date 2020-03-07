@@ -148,7 +148,7 @@ class RenamerWidget(base.BaseWidget, object):
         self._hierarchy_cbx.toggled.connect(self._on_toggle_hierarchy_cbx)
         self.manual_rename_widget.renameUpdate.connect(self.update_current_items)
         self.manual_rename_widget.replaceUpdate.connect(self.update_current_items)
-        self.manual_rename_widget.doRename.connect(self._on_simple_rename)
+        self.manual_rename_widget.doName.connect(self._on_simple_rename)
         self.manual_rename_widget.doSearchReplace.connect(self._on_search_replace)
         self.manual_rename_widget.doAddPrefix.connect(self._on_add_prefix)
         self.manual_rename_widget.doAddSuffix.connect(self._on_add_suffix)
@@ -166,6 +166,7 @@ class RenamerWidget(base.BaseWidget, object):
         self.manual_rename_widget.doUniqueName.connect(self._on_unique_name)
         self.manual_rename_widget.doRemoveAllNumbers.connect(self._on_remove_all_numbers)
         self.manual_rename_widget.doRemoveTailNumbers.connect(self._on_remove_tail_numbers)
+        self.manual_rename_widget.doRename.connect(self._on_simple_rename)
         # self.auto_rename_widget.renameUpdated.connect(self.update_current_items)
 
     def keyPressEvent(self, event):
@@ -303,7 +304,7 @@ class RenamerWidget(base.BaseWidget, object):
                 letter = strings.get_alpha(index, capital)
                 test_name = '{}_{}'.format(test_name, letter)
             else:
-                test_name = '{}_{}'.format(test_name, str(index).zfill(padding+1))
+                test_name = '{}_{}'.format(test_name, str(index).zfill(padding))
 
         if suffix:
             test_name = '{}_{}'.format(test_name, suffix)
@@ -317,7 +318,12 @@ class RenamerWidget(base.BaseWidget, object):
         if find_str != None and find_str != '' and replace_str != None:
             test_name = test_name.replace(find_str, replace_str)
 
-        item_names = [item.obj for item in items]
+        item_names = list()
+        for item in items:
+            if hasattr(item, 'obj'):
+                item_names.append(item.obj)
+            else:
+                item_names.append(item)
 
         # if object exists, try next index
         if tp.Dcc.object_exists(test_name) or test_name in item_names:
@@ -343,11 +349,19 @@ class RenamerWidget(base.BaseWidget, object):
 
             for item in items:
                 if not text:
-                    base_name = item.obj
+                    if hasattr(item, 'obj'):
+                        base_name = item.obj
+                    else:
+                        base_name = item
                 else:
                     base_name = text
 
-                if base_name == item.obj and not prefix and not suffix and not side:
+                if hasattr(item, 'obj'):
+                    item_obj = item.obj
+                else:
+                    item_obj = item
+
+                if base_name == item_obj and not prefix and not suffix and not side:
                     generate_preview_name = False
                 else:
                     generate_preview_name = True
@@ -357,8 +371,7 @@ class RenamerWidget(base.BaseWidget, object):
                     duplicated_names[base_name] = 0
 
                 if generate_preview_name:
-
-                    if base_name == item.obj and (prefix or suffix or side):
+                    if base_name == item_obj and (prefix or suffix or side):
                         index = None
                     else:
                         index = duplicated_names[base_name]
@@ -378,8 +391,12 @@ class RenamerWidget(base.BaseWidget, object):
                 else:
                     preview_name = base_name
 
-                item.preview_name = preview_name
+                if not isinstance(item, (str, unicode)):
+                    item.preview_name = preview_name
                 generated_names.append(preview_name)
+
+            return generated_names
+
         else:
             data = self.auto_rename_widget.get_rename_settings()
 
@@ -493,14 +510,27 @@ class RenamerWidget(base.BaseWidget, object):
             selected_objects=self._selected_radio.isChecked(), hierarchy=self._hierarchy_cbx.isChecked())
 
     @undo_decorator
-    def _on_simple_rename(self, new_name):
-        objs_to_rename = self._get_objects_to_rename() or list()
-        rename_shape =  self._auto_rename_shapes_cbx.isChecked() if self._auto_rename_shapes_cbx else True
-        for obj in objs_to_rename:
-            try:
+    def _on_simple_rename(self, new_name=None):
+        rename_shape = self._auto_rename_shapes_cbx.isChecked() if self._auto_rename_shapes_cbx else True
+        if new_name:
+            objs_to_rename = self._get_objects_to_rename() or list()
+            for obj in objs_to_rename:
+                try:
+                    tp.Dcc.rename_node(obj, new_name, rename_shape=rename_shape)
+                except Exception as exc:
+                    pass
+        else:
+            objs_to_rename = self._get_objects_to_rename() or list()
+            if not objs_to_rename:
+                logger.warning('No objects to rename. Please select at least one object!')
+                return
+            new_names = self._generate_preview_names(objs_to_rename)
+            if len(objs_to_rename) != len(new_names):
+                logger.warning('Impossible to retrieve valid renamed names. Rename nodes manually please!')
+                return
+
+            for obj, new_name in zip(objs_to_rename, new_names):
                 tp.Dcc.rename_node(obj, new_name, rename_shape=rename_shape)
-            except Exception as exc:
-                pass
 
     @undo_decorator
     def _on_rename(self):

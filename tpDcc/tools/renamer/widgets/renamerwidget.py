@@ -19,7 +19,7 @@ from tpDcc.libs.qt.widgets import splitters
 
 class RenamerWidget(base.BaseWidget, object):
     
-    doRename = Signal(str)
+    doName = Signal(str)
     renameUpdate = Signal()
 
     def __init__(self, parent=None):
@@ -92,4 +92,4 @@ class RenamerWidget(base.BaseWidget, object):
         new_name = self._renamer_line.text()
         if not new_name:
             return
-        self.doRename.emit(new_name)
+        self.doName.emit(new_name)

@@ -109,7 +109,6 @@ class PrefixSuffixWidget(base.BaseWidget, object):
         self._suffix_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         suffix_layout.addWidget(self._suffix_line)
         suffix_layout.addWidget(self._suffix_combo)
-        self._suffix_line.setEnabled(False)
         self._suffix_btn = QPushButton()
         self._suffix_btn.setIcon(tpDcc.ResourcesMgr().icon('suffix'))
         self._remove_suffix_btn = QPushButton()
