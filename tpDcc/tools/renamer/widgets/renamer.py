@@ -18,7 +18,7 @@ from tpDcc.libs.python import decorators, strings
 from tpDcc.libs.qt.core import base
 from tpDcc.libs.qt.widgets import splitter, splitters, stack
 from tpDcc.libs.nameit.core import namelib
-from tpDcc.tools.renamer.widgets import manualrenamewidget, categorywidget
+from tpDcc.tools.renamer.widgets import manualrenamewidget, autorenamewidget, categorywidget
 
 
 if tp.is_maya():
@@ -38,8 +38,10 @@ class RenamerWidget(base.BaseWidget, object):
 
     def __init__(self, config=None, naming_config=None, parent=None):
         self._name_lib = self.NAMING_LIB()
+        self._naming_config = naming_config
+        if not self._naming_config:
+            self._naming_config = tp.ConfigsMgr().get_config(config_name='tpDcc-naming')
         self._config = config or tp.ToolsMgr().get_tool_config('tpDcc-tools-renamer')
-        # self._naming_config = naming_config or tp.ConfigsMgr().get_tool_config('tDcc-naming')
         super(RenamerWidget, self).__init__(parent=parent)
 
         self.refresh()
@@ -101,10 +103,10 @@ class RenamerWidget(base.BaseWidget, object):
         self._splitter.addWidget(self.rename_tab)
 
         self.manual_rename_widget = manualrenamewidget.ManualRenameWidget()
-        # self.auto_rename_widget = autorenamewidget.AutoRenameWidget(naming_lib=self._name_lib)
+        self.auto_rename_widget = autorenamewidget.AutoRenameWidget(naming_lib=self._name_lib)
 
         self.rename_tab.addTab(self.manual_rename_widget, 'Manual')
-        # self.rename_tab.addTab(self.auto_rename_widget, 'Auto')
+        self.rename_tab.addTab(self.auto_rename_widget, 'Auto')
 
         self._stack = stack.SlidingStackedWidget()
 
@@ -138,7 +140,7 @@ class RenamerWidget(base.BaseWidget, object):
         self._setup_categories()
 
         self._splitter.handle(0).collapse()
-        # self._splitter.setSizes([1, 0])
+        self._splitter.setSizes([1, 0])
 
     def setup_signals(self):
         self._stack.animFinished.connect(self._on_stack_anim_finished)
@@ -167,7 +169,8 @@ class RenamerWidget(base.BaseWidget, object):
         self.manual_rename_widget.doRemoveAllNumbers.connect(self._on_remove_all_numbers)
         self.manual_rename_widget.doRemoveTailNumbers.connect(self._on_remove_tail_numbers)
         self.manual_rename_widget.doRename.connect(self._on_simple_rename)
-        # self.auto_rename_widget.renameUpdated.connect(self.update_current_items)
+        self.auto_rename_widget.renameUpdated.connect(self.update_current_items)
+        self.auto_rename_widget.doRename.connect(self._on_auto_rename)
 
     def keyPressEvent(self, event):
 
@@ -194,13 +197,13 @@ class RenamerWidget(base.BaseWidget, object):
     def _setup_categories(self):
         if not self._config:
             logger.warning(
-                'Impossible to setup categories because tpRenamer configuration file is not available!')
+                'Impossible to setup categories because tpDcc-tools-renamer configuration file is not available!')
             return
 
         categories = self._config.get('categories', default=list())
         if not categories:
             logger.warning(
-                'Impossible to setup categories because categories property is not defined in tpRenamer '
+                'Impossible to setup categories because categories property is not defined in tpDcc-tools-renamer '
                 'configuration file!')
             return
 
@@ -572,6 +575,97 @@ class RenamerWidget(base.BaseWidget, object):
 
         self.update_current_items()
         names_list.clearSelection()
+
+    @undo_decorator
+    def _on_auto_rename(self, rule_name, tokens_dict):
+
+        rename_shape = self._auto_rename_shapes_cbx.isChecked() if self._auto_rename_shapes_cbx else True
+        objs_to_rename = self._get_objects_to_rename() or list()
+        if not objs_to_rename:
+            logger.warning('No objects to rename. Please select at least one object!')
+            return
+
+        if not self._name_lib.has_rule(rule_name):
+            return
+        current_rule = self._name_lib.active_rule()
+
+        self._name_lib.set_active_rule(rule_name)
+        token_dict = dict()
+        for token_name, token_data in tokens_dict.items():
+            token_value_fn = token_data['fn']
+            token_value = token_value_fn()
+            token_dict[token_name] = token_value
+
+        # TODO: Naming config should be define the name of the rule to use when using auto renaming
+        solved_names = dict()
+        if rule_name == 'node' and self._naming_config:
+            auto_suffix = self._naming_config.get('auto_suffixes', default=dict())
+            if auto_suffix:
+                solved_names = dict()
+                for obj_name in objs_to_rename:
+                    obj_uuid = maya.cmds.ls(obj_name, uuid=True)[0]
+                    if obj_uuid in solved_names:
+                        tp.logger.warning(
+                            'Node with name: "{} and UUID "{}" already renamed to "{}"! Skipping ...'.format(
+                                obj_name, obj_uuid, solved_names[obj_name]))
+                        continue
+
+                    # TODO: This code is a duplicated version of the one in
+                    #  tpDcc.dccs.maya.core.name.auto_suffix_object function. Move this code to a DCC specific function
+                    obj_type = maya.cmds.objectType(obj_name)
+                    if obj_type == 'transform':
+                        shape_nodes = maya.cmds.listRelatives(obj_name, shapes=True, fullPath=True)
+                        if not shape_nodes:
+                            obj_type = 'group'
+                        else:
+                            obj_type = maya.cmds.objectType(shape_nodes[0])
+                    elif obj_type == 'joint':
+                        shape_nodes = maya.cmds.listRelatives(obj_name, shapes=True, fullPath=True)
+                        if shape_nodes and maya.cmds.objectType(shape_nodes[0]) == 'nurbsCurve':
+                            obj_type = 'controller'
+                    if obj_type == 'nurbsCurve':
+                        connections = maya.cmds.listConnections('{}.message'.format(obj_name))
+                        if connections:
+                            for node in connections:
+                                if maya.cmds.nodeType(node) == 'controller':
+                                    obj_type = 'controller'
+                                    break
+                    if obj_type not in auto_suffix:
+                        rule_name = 'node'
+                        node_type = obj_type
+                    else:
+                        rule_name = auto_suffix[obj_type]
+                        node_type = auto_suffix[obj_type]
+
+                    if 'node_type' in token_dict:
+                        token_dict.pop('node_type')
+                    if 'description' in token_dict:
+                        token_dict.pop('description')
+                    node_name = tp.Dcc.node_short_name(obj_name)
+                    solved_name = self._name_lib.solve(node_name, node_type=node_type)
+                    if not solved_name:
+                        continue
+                    solved_names[obj_uuid] = solved_name
+
+        if solved_names:
+            for obj_id, solved_name in solved_names.items():
+                obj_name = maya.cmds.ls(obj_id, long=True)[0]
+                tp.Dcc.rename_node(obj_name, solved_name, uuid=obj_id, rename_shape=rename_shape)
+        else:
+            for obj_name in objs_to_rename:
+                solve_name = self._name_lib.solve(**token_dict)
+                if not solve_name:
+                    tp.logger.warning(
+                        'Impossible to rename "{}" with rule "{}" | "{}"'.format(obj_name, rule_name, token_dict))
+                    continue
+                try:
+                    tp.Dcc.rename_node(obj_name, solve_name, rename_shape=rename_shape)
+                except Exception as exc:
+                    tp.logger.error('Impossible to rename "{}" to "{}" | {}'.format(obj_name, solve_name, exc))
+                    continue
+
+            if current_rule:
+                self._name_lib.set_active_rule(current_rule.name)
 
     @undo_decorator
     def _on_search_replace(self, search_text, replace_text):

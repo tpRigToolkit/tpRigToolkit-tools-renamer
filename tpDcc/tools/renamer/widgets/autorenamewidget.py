@@ -16,13 +16,12 @@ from Qt.QtWidgets import *
 
 import tpDcc
 from tpDcc.libs.qt.core import base, qtutils
-from tpDcc.libs.qt.widgets import buttons
-
-from tpDcc.tools import renamer
+from tpDcc.libs.qt.widgets import splitters
 
 
 class AutoRenameWidget(base.BaseWidget, object):
 
+    doRename = Signal(str, dict)
     renameUpdated = Signal()
 
     def __init__(self, naming_lib, parent=None):
@@ -43,40 +42,16 @@ class AutoRenameWidget(base.BaseWidget, object):
         auto_widget.setLayout(auto_layout)
         main_splitter.addWidget(auto_widget)
 
-        edit_icon = tpDcc.ResourcesMgr().icon('edit', extension='png')
-        self.edit_btn = buttons.IconButton(icon=edit_icon, icon_padding=2, button_style=buttons.ButtonStyles.FlatStyle)
-        self.rules_list = QTreeWidget(self)
-        self.rules_list.setHeaderHidden(True)
-        self.rules_list.setSortingEnabled(True)
-        self.rules_list.setRootIsDecorated(False)
-        self.rules_list.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.rules_list.sortByColumn(0, Qt.AscendingOrder)
-        self.rules_list.setUniformRowHeights(True)
-        self.rules_list.setAlternatingRowColors(True)
-        self.rules_list.setStyleSheet(
-            '''
-            QTreeView{alternate-background-color: #3b3b3b;}
-            QTreeView::item {padding:3px;}
-            QTreeView::item:!selected:hover {
-                background-color: #5b5b5b;
-                margin-left:-3px;
-                border-left:0px;
-            }
-            QTreeView::item:selected {
-                background-color: #48546a;
-                border-left:2px solid #6f93cf;
-                padding-left:2px;
-            }
-            QTreeView::item:selected:hover {
-                background-color: #586c7a;
-                border-left:2px solid #6f93cf;
-                padding-left:2px;
-            }
-            '''
-        )
+        self._rules_list = QTreeWidget(self)
+        self._rules_list.setHeaderHidden(True)
+        self._rules_list.setSortingEnabled(True)
+        self._rules_list.setRootIsDecorated(False)
+        self._rules_list.setSelectionMode(QAbstractItemView.SingleSelection)
+        self._rules_list.sortByColumn(0, Qt.AscendingOrder)
+        self._rules_list.setUniformRowHeights(True)
+        self._rules_list.setAlternatingRowColors(True)
 
-        auto_layout.addWidget(self.edit_btn)
-        auto_layout.addWidget(self.rules_list)
+        auto_layout.addWidget(self._rules_list)
 
         auto_w = QWidget()
         self.auto_l = QVBoxLayout()
@@ -87,9 +62,14 @@ class AutoRenameWidget(base.BaseWidget, object):
         self.main_auto_layout = QFormLayout()
         self.auto_l.addLayout(self.main_auto_layout)
 
+        self._rename_btn = QPushButton('Rename')
+        self._rename_btn.setIcon(tpDcc.ResourcesMgr().icon('rename'))
+        self.main_layout.addLayout(splitters.SplitterLayout())
+        self.main_layout.addWidget(self._rename_btn)
+
     def setup_signals(self):
-        self.edit_btn.clicked.connect(self._on_open_naming_manager)
-        self.rules_list.itemSelectionChanged.connect(self._on_item_selection_changed)
+        self._rules_list.itemSelectionChanged.connect(self._on_item_selection_changed)
+        self._rename_btn.clicked.connect(self._on_do_rename)
 
     def get_rename_settings(self):
         rename_settings = dict()
@@ -109,28 +89,28 @@ class AutoRenameWidget(base.BaseWidget, object):
         self.main_auto_layout.addRow(token_name, line_layout)
 
     def update_rules(self):
-        self.rules_list.blockSignals(True)
+        self._rules_list.blockSignals(True)
 
         try:
-            self.rules_list.clear()
+            self._rules_list.clear()
             item_to_select = None
             current_rule = self._naming_lib.active_rule()
             qtutils.clear_layout(self.main_auto_layout)
             rules = self._naming_lib.rules
             for rule in rules:
-                item = QTreeWidgetItem(self.rules_list, [rule.name])
+                item = QTreeWidgetItem(self._rules_list, [rule.name])
                 item.rule = rule
-                self.rules_list.addTopLevelItem(item)
-                self.rules_list.setCurrentItem(item)
-                if current_rule and current_rule.name() == rule.name:
+                self._rules_list.addTopLevelItem(item)
+                self._rules_list.setCurrentItem(item)
+                if current_rule and current_rule == rule.name:
                     item_to_select = item
-                self.rules_list.setItemSelected(item, False)
+                self._rules_list.setItemSelected(item, False)
             if item_to_select:
-                self.rules_list.setItemSelected(item_to_select, True)
+                self._rules_list.setItemSelected(item_to_select, True)
         except Exception as e:
-            renamer.logger.error('{} | {}'.format(e, traceback.format_exc()))
+            tpDcc.logger.error('{} | {}'.format(e, traceback.format_exc()))
         finally:
-            self.rules_list.blockSignals(False)
+            self._rules_list.blockSignals(False)
 
         self._on_change_name_rule()
 
@@ -138,7 +118,7 @@ class AutoRenameWidget(base.BaseWidget, object):
 
         qtutils.clear_layout(self.main_auto_layout)
 
-        rule_item = self.rules_list.currentItem()
+        rule_item = self._rules_list.currentItem()
         if not rule_item:
             return
 
@@ -186,11 +166,12 @@ class AutoRenameWidget(base.BaseWidget, object):
                 except Exception:
                     pass
                 w.currentTextChanged.connect(partial(self._on_combo_changed, token))
+                self._token_widgets[token_name] = {'widget': w, 'fn': w.currentText}
             else:
                 w = QLineEdit(self)
                 w.textChanged.connect(self._on_text_changed)
                 w.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-                self._token_widgets[token_name] = w
+                self._token_widgets[token_name] = {'widget': w, 'fn': w.text}
                 self.add_token(token_name, qtutils.get_line_layout('', self, w))
 
         if current_rule:
@@ -200,7 +181,7 @@ class AutoRenameWidget(base.BaseWidget, object):
         token_name = token.name
         if token_name not in self._token_widgets:
             return
-        token_widgets = self._token_widgets[token_name]
+        token_widgets = self._token_widgets[token_name]['widget']
         try:
             current_value = token.solve(self._naming_lib.active_rule(), text)
             token_widgets[1].setText(str(current_value))
@@ -211,13 +192,15 @@ class AutoRenameWidget(base.BaseWidget, object):
     def _on_text_changed(self, text):
         self.renameUpdated.emit()
 
-    def _on_open_naming_manager(self):
-        from tpNameIt.core import nameit
-        win = nameit.run()
-        return win
-
     def _on_item_selection_changed(self):
-        current_item = self.rules_list.currentItem()
+        current_item = self._rules_list.currentItem()
         current_rule = current_item.rule
         self._naming_lib.set_active_rule(current_rule.name)
         self._on_change_name_rule()
+
+    def _on_do_rename(self):
+        rule_item = self._rules_list.currentItem()
+        if not rule_item:
+            return
+
+        self.doRename.emit(rule_item.rule.name, self._token_widgets)
