@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Module that contains core implementation for Renamer Tool
+Module that contains core implementation for tpRigToolkit Renamer Tool
 """
 
 from __future__ import print_function, division, absolute_import
@@ -12,11 +12,12 @@ __license__ = "MIT"
 __maintainer__ = "Tomas Poveda"
 __email__ = "tpovedatd@gmail.com"
 
+import tpDcc
 from tpDcc.core import tool
 from tpDcc.libs.qt.widgets import toolset
 
 # Defines ID of the tool
-TOOL_ID = 'tpDcc-tools-renamer'
+TOOL_ID = 'tpRigToolkit-tools-renamer'
 
 # We skip the reloading of this module when launching the tool
 no_reload = True
@@ -31,16 +32,17 @@ class RenamerTool(tool.DccTool, object):
         base_tool_config = tool.DccTool.config_dict(file_name=file_name)
         tool_config = {
             'name': 'Renamer',
-            'id': 'tpDcc-tools-renamer',
+            'id': 'tpRigToolkit-tools-renamer',
             'icon': 'renamer',
             'tooltip': 'Renamer Tool to easily rename DCC objects in a visual way',
-            'tags': ['tpDcc', 'dcc', 'tool', 'renamer'],
+            'tags': ['tpRigToolkit', 'dcc', 'tool', 'renamer'],
             'is_checkable': False,
             'is_checked': False,
             'menu_ui': {'label': 'Renamer', 'load_on_startup': False, 'color': '', 'background_color': ''},
-            'menu': [{'type': 'menu', 'children': [{'id': 'tpDcc-tools-renamer', 'type': 'tool'}]}],
+            'menu': [{'type': 'menu', 'children': [{'id': 'tpRigToolkit-tools-renamer', 'type': 'tool'}]}],
             'shelf': [
-                {'name': 'tpDcc', 'children': [{'id': 'tpDcc-tools-renamer', 'display_label': False, 'type': 'tool'}]}
+                {'name': 'tpDcc', 'children': [{'id': 'tpRigToolkit-tools-renamer',
+                                                'display_label': False, 'type': 'tool'}]}
             ]
         }
         base_tool_config.update(tool_config)
@@ -51,15 +53,17 @@ class RenamerTool(tool.DccTool, object):
         return self.launch_frameless(*args, **kwargs)
 
 
-class RenamerToolsetWidget(toolset.ToolsetWidget, object):
+class RenamerToolset(toolset.ToolsetWidget, object):
     ID = TOOL_ID
 
     def __init__(self, *args, **kwargs):
-        super(RenamerToolsetWidget, self).__init__(*args, **kwargs)
+        super(RenamerToolset, self).__init__(*args, **kwargs)
 
     def contents(self):
 
-        from tpDcc.tools.renamer.widgets import renamer
+        from tpRigToolkit.tools.renamer.widgets import renamer
 
-        return [renamer.RenamerWidget()]
-
+        renamer_config = tpDcc.ConfigsMgr().get_config('tpDcc-tools-renamer')
+        renamer_widget = renamer.RigToolkitRenamerWidget(
+            config=renamer_config, parent=self)
+        return [renamer_widget]

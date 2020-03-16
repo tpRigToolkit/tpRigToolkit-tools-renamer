@@ -1,2 +1,2 @@
-include tpDcc/tools/renamer/__logging__.ini
-recursive-include tpDcc/tools/renamer/resources/* *.*
+include tpRigToolkit/tools/renamer/__logging__.ini
+recursive-include tpRigToolkit/tools/renamer/resources/* *.*

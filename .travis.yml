@@ -1,15 +1,30 @@
 language: python
+before_install:
+- pip install pycodestyle
 install:
 - pip install -r requirements.txt
 - python setup.py install
 script:
-- pytest
+- find . -name \*.py -exec pycodestyle --max-line-length=120 --ignore=E402 {} +
+- pytest --cov=tpRigToolkit
+- sphinx-apidoc -f -e -o docs/sphinx tpRigToolkit
+- sphinx-build -M html ./docs/sphinx ./
+after_success:
+- coveralls
+- cd html && touch .nojekyll && cd ../
 deploy:
-  skip_cleanup: true
-  provider: pypi
-  user: tpoveda
-  password:
-    secure: PN+D65bZs6TKDsCoe4n1+2CV/60787L/C1/4D4Z/TcO4RoUbM8e4/nUbTFRoglEZ46xjtu4NuDZltmKMABwYYVHCYGiIZGLvRL+Qn33oI7OMVSFeXFkCTPZI+sGJk6QX17A0HolSoEPWkMbvWIMKHI2WQqfErdk6H0HWSMOxYtj1ar4XGbUdUCAcGaZJe50L0RZmC7/tto6XdhSP666YQwhmUQ2qB3+cMZF+wultu/xPkJa3oTDLfGDUuqLpJ9x9J7ma/4okis39wlnBr2hpcfpa0XjxXUVgcsSZNAC1duptefZmeMLfzRKSb4sQVtKDZev75c/iEg8lR1mOacHwfGC512Xaj1ZIXBTVKXA3Rb9XSvl806whdAaLp/JpfhtlfP7GeVsZul/Arh0by9jQtK1F3/ZI/V4O3dWd8Mj9tTqO3tQwod1U3ZXwkhFls78/EjxgAKxfzgghHjK5WlEwfSWDGHpOrWNuxp9v1xAFtejWo9A/uGYwYK7DkCD0IKfiZvWiBntO9Xc6Ckky8qf0Uv9LjJZmedM1XvEuqfF2x/DSAovaLRCIzn0E7zqe8Aip6o1lxBKZX1xCZ5uaw+VeqBy00hJTaGq0Q0WSDAqJeAzNxa/qQRU6VICBo/PxohLViJ6zn+Vy3UqvLU+PuuQ9Yg8kqKOXX0LOTBtxdWtgek4=
-  on:
-    branch: master
-    tags: true
+  - provider: pages
+    skip_cleanup: true
+    github_token: "$GITHUB_TOKEN"
+    keep_history: true
+    local_dir: html
+    on:
+      branch: master
+  - provider: pypi
+    skip_cleanup: true
+    user: tpoveda
+    password:
+      secure: NmpXM7MDSgie1vqwzlBP9j3Dkjxjmflw2KLOeUXnZtxWwQJd/Hfk+nWYARdFs/AltuJwkQRkqUM+NA/wSckVUgVo6A6jKFJRMhwJXb/8fzkRtELJaYeaH2uYC7DlC+bzVPJtPXldYrQqu40/LoL/8IuUj+oFiGgEMAbJ+sizR4J67f30yhf0FLzSHKOJm5HR+oyuF1t5m+OH4mlxhmsMC5O1QkfdPQs3yM0k2DiGWzoVtaVP5sKXYcXb6byV9iz9+k7QpqtuIygLADvpgHKVGTdForm0+Z9cOHfVHr6N3XM5B704Wyx6YKAvm9lYeEO8g4H1nwRPKR2gFeS2QQ5lRf+mgHN5+9HfGp5Q6bcfQrQZahUIqtvkCKHASLSkkY2fyq5WpFqN/0Owc3f8BU9V+a9CMwuDHL640o3CJtwGtTflKMcwCPY+grmSV7RNhmDZCVt7vgRIhKkr45LK59TnCo3g4htQyG5PXh+AWcBfR30+fqhUfyQltdSieOSfq8PDwTAbqtq9PugMoYfsE9K62fymu0054lvZHOABcb9CXmlmNzRbjKE2zVdS+X0AEVCJnqXsKvHTLzl0StOUAM9h4ab47vZhvbx3ysLDOmBBgp0PIy7RP6ZMx/1Sz5mLXoH2mdwogbc0oc0tJIs+BINbEwQlViWyKbRHExa/L8P8QrU=
+    on:
+      branch: master
+      tags: true

@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """
-Module that defines package version for tpDcc-tools-renamer
+Module that defines package version for tpRigToolkit-tools-renamer
 """
 
 from __future__ import print_function, division, absolute_import
 
-__version__ = "0.0.4"
+__version__ = "0.0.1"

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Initialization module for tpDcc
+Initialization module for tpRigToolkit-tools
 """
 
 from __future__ import print_function, division, absolute_import

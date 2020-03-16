@@ -1,9 +1,6 @@
 # ===================================================================
-# tpDcc-tools-renamer requirements file
+# tpRigToolkit-tools-renamer requirements file
 # ===================================================================
 pyyaml
 lucidity
-tpDcc-libs-python
-tpDcc-core
-tpDcc-libs-qt
-tpDcc-libs-nameit
+tpDcc-tools-renamer
