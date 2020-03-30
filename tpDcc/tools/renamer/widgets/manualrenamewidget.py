@@ -92,13 +92,15 @@ class ManualRenameWidget(base.BaseWidget, object):
         self._number_side_widget.doAppendPadding.connect(self.doAppendPadding.emit)
         self._number_side_widget.doChangePadding.connect(self.doChangePadding.emit)
         self._number_side_widget.doSide.connect(self.doSide.emit)
-        self._namespace_widget.doAddNamespace.connect(self.doAddNamespace.emit)
-        self._namespace_widget.doRemoveNamespace.connect(self.doRemoveNamespace.emit)
         self._utils_widget.doAutoSuffix.connect(self.doAutoSuffix.emit)
         self._utils_widget.doUniqueName.connect(self.doUniqueName.emit)
         self._utils_widget.doRemoveAllNumbers.connect(self.doRemoveAllNumbers.emit)
         self._utils_widget.doRemoveTailNumbers.connect(self.doRemoveTailNumbers.emit)
         self._rename_btn.clicked.connect(self.doRename.emit)
+
+        if tpDcc.is_maya():
+            self._namespace_widget.doAddNamespace.connect(self.doAddNamespace.emit)
+            self._namespace_widget.doRemoveNamespace.connect(self.doRemoveNamespace.emit)
 
     def get_rename_settings(self):
         """

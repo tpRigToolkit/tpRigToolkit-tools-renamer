@@ -452,7 +452,7 @@ class RenamerWidget(base.BaseWidget, object):
             children_list = list(set(children_list))
             objs_to_rename.extend(children_list)
 
-        objs_to_rename = [obj for obj in objs_to_rename if tp.Dcc.node_type(obj) == 'transform']
+        # objs_to_rename = [obj for obj in objs_to_rename if tp.Dcc.node_type(obj) == 'transform']
 
         # We reverse the list so we update first children and later parents, otherwise we will have
         # problems during renaming if we use full paths
@@ -602,7 +602,7 @@ class RenamerWidget(base.BaseWidget, object):
             auto_suffix = self._naming_config.get('auto_suffixes', default=dict())
             if auto_suffix:
                 solved_names = dict()
-                for obj_name in objs_to_rename:
+                for i, obj_name in enumerate(objs_to_rename):
                     obj_uuid = maya.cmds.ls(obj_name, uuid=True)[0]
                     if obj_uuid in solved_names:
                         tp.logger.warning(
@@ -637,12 +637,14 @@ class RenamerWidget(base.BaseWidget, object):
                         rule_name = auto_suffix[obj_type]
                         node_type = auto_suffix[obj_type]
 
-                    if 'node_type' in token_dict:
-                        token_dict.pop('node_type')
-                    if 'description' in token_dict:
-                        token_dict.pop('description')
+                    if 'node_type' in token_dict and token_dict['node_type']:
+                        node_type = token_dict.pop('node_type')
                     node_name = tp.Dcc.node_short_name(obj_name)
-                    solved_name = self._name_lib.solve(node_name, node_type=node_type)
+                    description = token_dict['description'] if (
+                            'description' in token_dict and token_dict['description']) else node_name
+                    side = token_dict.get('side', None)
+                    solved_name = self._name_lib.solve(
+                        description, id=len(objs_to_rename) - 1 - i, side=side, node_type=node_type)
                     if not solved_name:
                         continue
                     solved_names[obj_uuid] = solved_name

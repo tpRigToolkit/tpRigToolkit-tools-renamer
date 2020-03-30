@@ -148,7 +148,6 @@ class AutoRenameWidget(base.BaseWidget, object):
                 w_l = QLabel()
                 w.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
                 w_l.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-                self._token_widgets[token_name] = [w, w_l]
                 self.add_token(token_name, qtutils.get_line_layout('', self, w, QLabel(u'\u25ba'), w_l))
                 for key, value in token_value.items():
                     if key == 'default':
@@ -166,12 +165,12 @@ class AutoRenameWidget(base.BaseWidget, object):
                 except Exception:
                     pass
                 w.currentTextChanged.connect(partial(self._on_combo_changed, token))
-                self._token_widgets[token_name] = {'widget': w, 'fn': w.currentText}
+                self._token_widgets[token_name] = {'widget': [w, w_l], 'fn': w.currentText}
             else:
                 w = QLineEdit(self)
                 w.textChanged.connect(self._on_text_changed)
                 w.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-                self._token_widgets[token_name] = {'widget': w, 'fn': w.text}
+                self._token_widgets[token_name] = {'widget': [w], 'fn': w.text}
                 self.add_token(token_name, qtutils.get_line_layout('', self, w))
 
         if current_rule:
