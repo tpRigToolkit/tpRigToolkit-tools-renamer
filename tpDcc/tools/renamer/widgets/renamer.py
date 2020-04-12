@@ -781,7 +781,7 @@ class RenamerWidget(base.BaseWidget, object):
             filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only)
 
         for obj in filtered_obj_list:
-            new_name = obj[num_to_remove+1:]
+            new_name = obj[num_to_remove + 1:]
             tp.Dcc.rename_node(obj, new_name, rename_shape=rename_shape)
 
     @undo_decorator

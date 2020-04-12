@@ -25,7 +25,7 @@ class PrefixSuffixWidget(base.BaseWidget, object):
     doRemoveSuffix = Signal()
     doRemoveFirst = Signal(int)
     doRemoveLast = Signal(int)
-    
+
     def __init__(self, parent=None):
 
         self._config = tpDcc.ToolsMgr().get_tool_config('tpDcc-tools-renamer')
