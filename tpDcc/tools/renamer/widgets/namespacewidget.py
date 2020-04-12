@@ -84,4 +84,3 @@ class NamespaceWidget(base.BaseWidget, object):
             self.doAddNamespace.emit(namespace_text)
         elif combo_index == 1:
             self.doRemoveNamespace.emit(namespace_text)
-

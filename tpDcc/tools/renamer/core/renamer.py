@@ -62,4 +62,3 @@ class RenamerToolsetWidget(toolset.ToolsetWidget, object):
         from tpDcc.tools.renamer.widgets import renamer
 
         return [renamer.RenamerWidget()]
-

@@ -230,7 +230,7 @@ class RenamerWidget(base.BaseWidget, object):
                 category_widget.doPreview.connect(self._set_preview_names)
                 category_widget.togglePreview.connect(self.update_current_items)
                 category_widget.doRename.connect(self._on_rename)
-                category_btn.clicked.connect(partial(self._on_category_selected, i+1))
+                category_btn.clicked.connect(partial(self._on_category_selected, i + 1))
 
         if self._stack.count() > 1:
             self._on_category_selected(1)
@@ -318,7 +318,7 @@ class RenamerWidget(base.BaseWidget, object):
         if remove_last and remove_last > 0:
             test_name = test_name[:-remove_last]
 
-        if find_str != None and find_str != '' and replace_str != None:
+        if find_str is not None and find_str != '' and replace_str is not None:
             test_name = test_name.replace(find_str, replace_str)
 
         item_names = list()
@@ -344,7 +344,8 @@ class RenamerWidget(base.BaseWidget, object):
         # Manual Rename
         if self.rename_tab.currentIndex() == 0:
 
-            text, prefix, suffix, padding, naming_method, upper, side, remove_first, remove_last, joint_end = self.manual_rename_widget.get_rename_settings()
+            text, prefix, suffix, padding, naming_method, upper, \
+            side, remove_first, remove_last, joint_end = self.manual_rename_widget.get_rename_settings()
             find_str, replace_str = self.manual_rename_widget.get_replace_settings()
 
             duplicated_names = dict()
@@ -540,7 +541,7 @@ class RenamerWidget(base.BaseWidget, object):
         """
         Internal callback function that is called when the user presses the rename button
         """
-        
+
         category_widget = self._stack.current_widget
         if not category_widget:
             return
@@ -686,7 +687,7 @@ class RenamerWidget(base.BaseWidget, object):
         Internal callback function that is called when the user presses the add prefix button
         :param prefix_text: str, prefix to add
         """
-        
+
         if not prefix_text:
             return
         if tp.is_maya():
@@ -700,7 +701,7 @@ class RenamerWidget(base.BaseWidget, object):
         dcc_type = None
         if self._node_types_combo.currentText() in tp.Dcc.TYPE_FILTERS:
             dcc_type = self._node_types_combo.currentText()
-        
+
         return tp.Dcc.add_name_prefix(
             prefix=prefix_text, filter_type=dcc_type, search_hierarchy=search_hierarchy, selection_only=selection_only,
             rename_shape=rename_shape)
@@ -711,7 +712,7 @@ class RenamerWidget(base.BaseWidget, object):
         Internal callback function that is called when the user presses the add suffix button
         :param suffix_text: str, suffix to add
         """
-        
+
         if not suffix_text:
             return
 
@@ -728,7 +729,7 @@ class RenamerWidget(base.BaseWidget, object):
         """
         Internal callback function that is called when the user presses the remove prefix button
         """
-        
+
         search_hierarchy, selection_only = self._get_filter_vars()
         if not search_hierarchy and not selection_only:
             tp.logger.warning('Remove Prefix must be used with "Selected" option not with "All"')

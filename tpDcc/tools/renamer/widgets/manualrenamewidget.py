@@ -41,7 +41,7 @@ class ManualRenameWidget(base.BaseWidget, object):
     doRemoveAllNumbers = Signal()
     doRemoveTailNumbers = Signal()
     doRename = Signal()
-    
+
     def __init__(self, parent=None):
         super(ManualRenameWidget, self).__init__(parent=parent)
 
@@ -124,4 +124,3 @@ class ManualRenameWidget(base.BaseWidget, object):
         """
 
         return self._replacer_widget.get_replace_settings()
-

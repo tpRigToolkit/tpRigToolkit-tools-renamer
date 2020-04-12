@@ -334,5 +334,3 @@ class CategoryWidget(base.BaseWidget, object):
 
     def _on_toggle_preview(self, flag):
         self.togglePreview.emit()
-
-

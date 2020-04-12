@@ -91,7 +91,7 @@ class ReplacerWidget(base.BaseWidget, object):
 
     def _on_with_line_text_changed(self, new_text):
         self.replaceUpdate.emit()
-        
+
     def _on_search_and_replace(self):
         search_text = self._replace_line.text()
         if not search_text:
