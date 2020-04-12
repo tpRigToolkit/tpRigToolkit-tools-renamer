@@ -344,8 +344,8 @@ class RenamerWidget(base.BaseWidget, object):
         # Manual Rename
         if self.rename_tab.currentIndex() == 0:
 
-            text, prefix, suffix, padding, naming_method, upper, \
-            side, remove_first, remove_last, joint_end = self.manual_rename_widget.get_rename_settings()
+            text, prefix, suffix, padding, naming_method, upper, side, remove_first, remove_last, joint_end = \
+                self.manual_rename_widget.get_rename_settings()
             find_str, replace_str = self.manual_rename_widget.get_replace_settings()
 
             duplicated_names = dict()
@@ -641,8 +641,8 @@ class RenamerWidget(base.BaseWidget, object):
                     if 'node_type' in token_dict and token_dict['node_type']:
                         node_type = token_dict.pop('node_type')
                     node_name = tp.Dcc.node_short_name(obj_name)
-                    description = token_dict['description'] if (
-                            'description' in token_dict and token_dict['description']) else node_name
+                    description = token_dict[
+                        'description'] if ('description' in token_dict and token_dict['description']) else node_name
                     side = token_dict.get('side', None)
                     solved_name = self._name_lib.solve(
                         description, id=len(objs_to_rename) - 1 - i, side=side, node_type=node_type)
@@ -783,7 +783,7 @@ class RenamerWidget(base.BaseWidget, object):
         for obj in filtered_obj_list:
             new_name = obj[num_to_remove+1:]
             tp.Dcc.rename_node(obj, new_name, rename_shape=rename_shape)
-    
+
     @undo_decorator
     def _on_remove_last(self, num_to_remove):
         """

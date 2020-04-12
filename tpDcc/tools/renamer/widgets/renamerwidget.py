@@ -18,7 +18,6 @@ from tpDcc.libs.qt.widgets import dividers
 
 
 class RenamerWidget(base.BaseWidget, object):
-    
     doName = Signal(str)
     renameUpdate = Signal()
 

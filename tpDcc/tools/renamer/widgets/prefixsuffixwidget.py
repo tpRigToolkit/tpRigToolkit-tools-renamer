@@ -318,7 +318,7 @@ class PrefixSuffixWidget(base.BaseWidget, object):
         """
 
         self.doRemoveFirst.emit(self._remove_first_spn.value())
-    
+
     def _on_remove_last(self):
         """
         Internal callback function that is called when remove last characters button is clicked

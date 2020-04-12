@@ -155,7 +155,7 @@ class AutoRenameWidget(base.BaseWidget, object):
                     w.addItem(key)
                 try:
                     if token_default > 0:
-                        w.setCurrentIndex(token_default-1)
+                        w.setCurrentIndex(token_default - 1)
                 except Exception:
                     w.setCurrentIndex(0)
                 current_text = w.currentText()
