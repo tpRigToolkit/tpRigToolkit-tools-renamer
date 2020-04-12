@@ -12,7 +12,7 @@ from Qt.QtWidgets import *
 
 import tpDcc
 from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import accordion, splitters
+from tpDcc.libs.qt.widgets import accordion, dividers
 
 from tpDcc.tools.renamer.widgets import renamerwidget, replacerwidget, prefixsuffixwidget, numbersidewidget
 from tpDcc.tools.renamer.widgets import namespacewidget, utilswidget
@@ -70,7 +70,7 @@ class ManualRenameWidget(base.BaseWidget, object):
 
         self._rename_btn = QPushButton('Rename')
         self._rename_btn.setIcon(tpDcc.ResourcesMgr().icon('rename'))
-        self.main_layout.addLayout(splitters.SplitterLayout())
+        self.main_layout.addLayout(dividers.DividerLayout())
         self.main_layout.addWidget(self._rename_btn)
 
     def setup_signals(self):

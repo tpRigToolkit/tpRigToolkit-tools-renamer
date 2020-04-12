@@ -16,7 +16,7 @@ from Qt.QtWidgets import *
 
 import tpDcc
 from tpDcc.libs.qt.core import base, qtutils
-from tpDcc.libs.qt.widgets import splitters
+from tpDcc.libs.qt.widgets import dividers
 
 
 class AutoRenameWidget(base.BaseWidget, object):
@@ -64,7 +64,7 @@ class AutoRenameWidget(base.BaseWidget, object):
 
         self._rename_btn = QPushButton('Rename')
         self._rename_btn.setIcon(tpDcc.ResourcesMgr().icon('rename'))
-        self.main_layout.addLayout(splitters.SplitterLayout())
+        self.main_layout.addLayout(dividers.DividerLayout())
         self.main_layout.addWidget(self._rename_btn)
 
     def setup_signals(self):

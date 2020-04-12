@@ -12,7 +12,7 @@ from Qt.QtWidgets import *
 
 import tpDcc as tp
 from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import search, buttons, splitters
+from tpDcc.libs.qt.widgets import search, buttons, dividers
 
 if tp.is_maya():
     import tpDcc.dccs.maya as maya
@@ -92,12 +92,12 @@ class CategoryWidget(base.BaseWidget, object):
         bottom_buttons_layout.addWidget(self._all_btn)
         bottom_buttons_layout.addWidget(self._none_btn)
 
-        bottom_buttons_layout.addWidget(splitters.get_horizontal_separator_widget())
+        bottom_buttons_layout.addWidget(dividers.get_horizontal_separator_widget())
         self._hide_default_scene_nodes_cbx = QCheckBox('Hide Default Scene Objects')
         self._hide_default_scene_nodes_cbx.setChecked(True)
         bottom_buttons_layout.addWidget(self._hide_default_scene_nodes_cbx)
 
-        self.main_layout.addLayout(splitters.SplitterLayout())
+        self.main_layout.addLayout(dividers.DividerLayout())
 
         preview_layout = QHBoxLayout()
         preview_layout.setContentsMargins(0, 0, 0, 0)

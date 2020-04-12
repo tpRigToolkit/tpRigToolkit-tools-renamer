@@ -16,7 +16,7 @@ from Qt.QtWidgets import *
 import tpDcc as tp
 from tpDcc.libs.python import decorators, strings
 from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import splitter, splitters, stack
+from tpDcc.libs.qt.widgets import splitter, dividers, stack
 from tpDcc.libs.nameit.core import namelib
 from tpDcc.tools.renamer.widgets import manualrenamewidget, autorenamewidget, categorywidget
 
@@ -56,7 +56,7 @@ class RenamerWidget(base.BaseWidget, object):
         self._buttons_grp = QButtonGroup(self)
         self._buttons_grp.setExclusive(True)
         self.main_layout.addLayout(self._top_layout)
-        self.main_layout.addLayout(splitters.SplitterLayout())
+        self.main_layout.addLayout(dividers.DividerLayout())
 
         self._categories_layout = QHBoxLayout()
         self._categories_layout.setAlignment(Qt.AlignLeft)

@@ -13,7 +13,7 @@ from Qt.QtGui import *
 
 import tpDcc
 from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import splitters
+from tpDcc.libs.qt.widgets import dividers
 
 
 class PrefixSuffixWidget(base.BaseWidget, object):
@@ -45,7 +45,7 @@ class PrefixSuffixWidget(base.BaseWidget, object):
         self._prefix_cbx = QCheckBox()
         self._prefix_cbx.setChecked(True)
         prefix_layout.addWidget(self._prefix_cbx)
-        prefix_layout.addWidget(splitters.get_horizontal_separator_widget())
+        prefix_layout.addWidget(dividers.get_horizontal_separator_widget())
         self._prefix_line = QLineEdit()
         self._prefix_line.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self._prefix_line.setPlaceholderText('Prefix')
@@ -70,7 +70,7 @@ class PrefixSuffixWidget(base.BaseWidget, object):
         self.main_layout.addLayout(remove_first_layout)
         self._remove_first_cbx = QCheckBox()
         remove_first_layout.addWidget(self._remove_first_cbx)
-        remove_first_layout.addWidget(splitters.get_horizontal_separator_widget())
+        remove_first_layout.addWidget(dividers.get_horizontal_separator_widget())
         self._remove_first_lbl = QLabel('Remove first: ')
         self._remove_first_spn = QSpinBox()
         self._remove_first_spn.setFocusPolicy(Qt.NoFocus)
@@ -88,7 +88,7 @@ class PrefixSuffixWidget(base.BaseWidget, object):
         remove_first_layout.addItem(QSpacerItem(10, 0, QSizePolicy.Expanding, QSizePolicy.Preferred))
         remove_first_layout.addWidget(self._remove_first_btn)
 
-        self.main_layout.addLayout(splitters.SplitterLayout())
+        self.main_layout.addLayout(dividers.DividerLayout())
 
         suffix_layout = QHBoxLayout()
         suffix_layout.setAlignment(Qt.AlignLeft)
@@ -98,7 +98,7 @@ class PrefixSuffixWidget(base.BaseWidget, object):
         self._suffix_cbx = QCheckBox()
         self._suffix_cbx.setChecked(True)
         suffix_layout.addWidget(self._suffix_cbx)
-        suffix_layout.addWidget(splitters.get_horizontal_separator_widget())
+        suffix_layout.addWidget(dividers.get_horizontal_separator_widget())
         self._suffix_line = QLineEdit()
         self._suffix_line.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         suffix_reg_exp = QRegExp("^[a-zA-Z_0-9]+")
@@ -123,7 +123,7 @@ class PrefixSuffixWidget(base.BaseWidget, object):
         self.main_layout.addLayout(remove_last_layout)
         self._remove_last_cbx = QCheckBox()
         remove_last_layout.addWidget(self._remove_last_cbx)
-        remove_last_layout.addWidget(splitters.get_horizontal_separator_widget())
+        remove_last_layout.addWidget(dividers.get_horizontal_separator_widget())
         self._remove_last_lbl = QLabel('Remove last: ')
         self._remove_last_spn = QSpinBox()
         self._remove_last_spn.setEnabled(False)
@@ -150,7 +150,7 @@ class PrefixSuffixWidget(base.BaseWidget, object):
         self._last_joint_is_end_lbl = QLabel('Last joint is an endJoint?')
         self._last_joint_is_end_cbx.setChecked(True)
         last_joint_layout.addWidget(self._last_joint_is_end_cbx)
-        last_joint_layout.addWidget(splitters.get_horizontal_separator_widget())
+        last_joint_layout.addWidget(dividers.get_horizontal_separator_widget())
         last_joint_layout.addWidget(self._last_joint_is_end_lbl)
 
     def setup_signals(self):

@@ -14,7 +14,7 @@ from Qt.QtGui import *
 
 import tpDcc
 from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import splitters
+from tpDcc.libs.qt.widgets import dividers
 
 
 class ReplacerWidget(base.BaseWidget, object):
@@ -36,7 +36,7 @@ class ReplacerWidget(base.BaseWidget, object):
 
         self._find_replace_cbx = QCheckBox()
         replace_layout.addWidget(self._find_replace_cbx)
-        replace_layout.addWidget(splitters.get_horizontal_separator_widget())
+        replace_layout.addWidget(dividers.get_horizontal_separator_widget())
 
         self._replace_line = QLineEdit()
         self._replace_line.setPlaceholderText('Search')

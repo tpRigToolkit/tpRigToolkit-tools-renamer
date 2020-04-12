@@ -12,7 +12,7 @@ from Qt.QtWidgets import *
 
 import tpDcc
 from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import splitters
+from tpDcc.libs.qt.widgets import dividers
 
 
 class NumberSideWidget(base.BaseWidget, object):
@@ -75,7 +75,7 @@ class NumberSideWidget(base.BaseWidget, object):
         rename_mult_layout.addWidget(self._lower_radio)
         rename_mult_layout.addWidget(self._upper_radio)
 
-        self.main_layout.addLayout(splitters.SplitterLayout())
+        self.main_layout.addLayout(dividers.DividerLayout())
 
         side_layout = QHBoxLayout()
         side_layout.setAlignment(Qt.AlignLeft)
@@ -85,7 +85,7 @@ class NumberSideWidget(base.BaseWidget, object):
         self._side_cbx = QCheckBox()
         self._side_cbx.setChecked(True)
         side_layout.addWidget(self._side_cbx)
-        side_layout.addWidget(splitters.get_horizontal_separator_widget())
+        side_layout.addWidget(dividers.get_horizontal_separator_widget())
         self._side_lbl = QLabel('Side: ')
         self._none_side = QRadioButton('None')
         self._right_side = QRadioButton('Right')

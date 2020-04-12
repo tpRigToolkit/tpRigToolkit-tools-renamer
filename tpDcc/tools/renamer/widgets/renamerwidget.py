@@ -14,7 +14,7 @@ from Qt.QtGui import *
 
 import tpDcc
 from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import splitters
+from tpDcc.libs.qt.widgets import dividers
 
 
 class RenamerWidget(base.BaseWidget, object):
@@ -44,7 +44,7 @@ class RenamerWidget(base.BaseWidget, object):
         renamer_widget.layout().addLayout(rename_layout)
         self._base_name_cbx = QCheckBox()
         rename_layout.addWidget(self._base_name_cbx)
-        rename_layout.addWidget(splitters.get_horizontal_separator_widget())
+        rename_layout.addWidget(dividers.get_horizontal_separator_widget())
         self._renamer_line = QLineEdit()
         self._renamer_line.setPlaceholderText('New Name')
 

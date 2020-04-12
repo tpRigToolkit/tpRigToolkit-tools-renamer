@@ -12,7 +12,7 @@ from Qt.QtWidgets import *
 
 import tpDcc
 from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import splitters
+from tpDcc.libs.qt.widgets import dividers
 
 if tpDcc.is_maya():
     from tpDcc.dccs.maya.core import gui, namespace
@@ -72,10 +72,10 @@ class UtilsWidget(base.BaseWidget, object):
         index_utils_layout.addWidget(self._remove_tail_numbers_btn)
 
         base_layout.addLayout(name_utils_layout)
-        base_layout.addLayout(splitters.SplitterLayout())
+        base_layout.addLayout(dividers.DividerLayout())
         base_layout.addLayout(index_utils_layout)
         if tpDcc.is_maya():
-            base_layout.addLayout(splitters.SplitterLayout())
+            base_layout.addLayout(dividers.DividerLayout())
             base_layout.addLayout(namespace_utils_layout)
 
     def setup_signals(self):
