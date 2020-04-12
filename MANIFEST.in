@@ -1,2 +1,4 @@
 include tpDcc/tools/renamer/__logging__.ini
 recursive-include tpDcc/tools/renamer/resources/* *.*
+include versioneer.py
+include tpDcc/tools/renamer/_version.py
