@@ -1,0 +1,19 @@
+tpDcc.tools.renamer package
+===========================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   tpDcc.tools.renamer.core
+   tpDcc.tools.renamer.widgets
+
+Module contents
+---------------
+
+.. automodule:: tpDcc.tools.renamer
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+tpDcc.tools.renamer.widgets.numbersidewidget module
+===================================================
+
+.. automodule:: tpDcc.tools.renamer.widgets.numbersidewidget
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,27 @@
+tpDcc.tools.renamer.widgets package
+===================================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   tpDcc.tools.renamer.widgets.autorenamewidget
+   tpDcc.tools.renamer.widgets.categorywidget
+   tpDcc.tools.renamer.widgets.manualrenamewidget
+   tpDcc.tools.renamer.widgets.namespacewidget
+   tpDcc.tools.renamer.widgets.numbersidewidget
+   tpDcc.tools.renamer.widgets.prefixsuffixwidget
+   tpDcc.tools.renamer.widgets.renamer
+   tpDcc.tools.renamer.widgets.renamerwidget
+   tpDcc.tools.renamer.widgets.replacerwidget
+   tpDcc.tools.renamer.widgets.utilswidget
+
+Module contents
+---------------
+
+.. automodule:: tpDcc.tools.renamer.widgets
+   :members:
+   :undoc-members:
+   :show-inheritance:

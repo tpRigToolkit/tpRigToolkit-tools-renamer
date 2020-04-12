@@ -1,0 +1,18 @@
+tpDcc.tools package
+===================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   tpDcc.tools.renamer
+
+Module contents
+---------------
+
+.. automodule:: tpDcc.tools
+   :members:
+   :undoc-members:
+   :show-inheritance:
