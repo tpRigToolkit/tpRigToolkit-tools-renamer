@@ -2,6 +2,6 @@
 # tpDcc-tools-renamer requirements file
 # ===================================================================
 tpDcc-libs-python
-tpDcc-libs-core
+tpDcc-core
 tpDcc-libs-qt
 tpDcc-libs-nameit
