@@ -20,59 +20,6 @@ from tpDcc.tools.renamer.widgets import namespacewidget, utilswidget
 
 class ManualRenameWidget(base.BaseWidget, object):
 
-    renameUpdate = Signal()
-    replaceUpdate = Signal()
-    doName = Signal(str)
-    doSearchReplace = Signal(str, str)
-    doAddPrefix = Signal(str)
-    doRemovePrefix = Signal()
-    doAddSuffix = Signal(str)
-    doRemoveSuffix = Signal()
-    doRemoveFirst = Signal(int)
-    doRemoveLast = Signal(int)
-    doReplacePadding = Signal(int)
-    doAppendPadding = Signal(int)
-    doChangePadding = Signal(int)
-    doSide = Signal(str)
-    doAddNamespace = Signal(str)
-    doRemoveNamespace = Signal(str)
-    doAutoSuffix = Signal()
-    doUniqueName = Signal()
-    doRemoveAllNumbers = Signal()
-    doRemoveTailNumbers = Signal()
-    doRename = Signal()
-
-    def __init__(self, parent=None):
-        super(ManualRenameWidget, self).__init__(parent=parent)
-
-    def ui(self):
-        super(ManualRenameWidget, self).ui()
-
-        manual_accordion = accordion.AccordionWidget()
-        self.main_layout.addWidget(manual_accordion)
-
-        self._renamer_widget = renamerwidget.RenamerWidget()
-        self._prefix_suffix_widget = prefixsuffixwidget.PrefixSuffixWidget()
-        self._number_side_widget = numbersidewidget.NumberSideWidget()
-        self._namespace_widget = None
-        if tpDcc.is_maya():
-            self._namespace_widget = namespacewidget.NamespaceWidget()
-        self._replacer_widget = replacerwidget.ReplacerWidget()
-        self._utils_widget = utilswidget.UtilsWidget()
-
-        manual_accordion.add_item('Name', self._renamer_widget)
-        manual_accordion.add_item('Prefix/Suffix', self._prefix_suffix_widget)
-        manual_accordion.add_item('Number & Side', self._number_side_widget)
-        if self._namespace_widget:
-            manual_accordion.add_item('Namespace', self._namespace_widget)
-        manual_accordion.add_item('Search & Replace', self._replacer_widget)
-        manual_accordion.add_item('Utils', self._utils_widget)
-
-        self._rename_btn = QPushButton('Rename')
-        self._rename_btn.setIcon(tpDcc.ResourcesMgr().icon('rename'))
-        self.main_layout.addLayout(dividers.DividerLayout())
-        self.main_layout.addWidget(self._rename_btn)
-
     def setup_signals(self):
         self._renamer_widget.renameUpdate.connect(self.renameUpdate.emit)
         self._renamer_widget.doName.connect(self.doName.emit)

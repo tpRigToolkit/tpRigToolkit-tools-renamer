@@ -30,43 +30,6 @@ class AutoRenameWidget(base.BaseWidget, object):
 
         self._token_widgets = dict()
 
-    def ui(self):
-        super(AutoRenameWidget, self).ui()
-
-        main_splitter = QSplitter(Qt.Horizontal)
-        main_splitter.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        self.main_layout.addWidget(main_splitter)
-
-        auto_widget = QWidget()
-        auto_layout = QVBoxLayout()
-        auto_widget.setLayout(auto_layout)
-        main_splitter.addWidget(auto_widget)
-
-        self._rules_list = QTreeWidget(self)
-        self._rules_list.setHeaderHidden(True)
-        self._rules_list.setSortingEnabled(True)
-        self._rules_list.setRootIsDecorated(False)
-        self._rules_list.setSelectionMode(QAbstractItemView.SingleSelection)
-        self._rules_list.sortByColumn(0, Qt.AscendingOrder)
-        self._rules_list.setUniformRowHeights(True)
-        self._rules_list.setAlternatingRowColors(True)
-
-        auto_layout.addWidget(self._rules_list)
-
-        auto_w = QWidget()
-        self.auto_l = QVBoxLayout()
-        auto_w.setLayout(self.auto_l)
-        auto_w.setMinimumWidth(200)
-        main_splitter.addWidget(auto_w)
-
-        self.main_auto_layout = QFormLayout()
-        self.auto_l.addLayout(self.main_auto_layout)
-
-        self._rename_btn = QPushButton('Rename')
-        self._rename_btn.setIcon(tpDcc.ResourcesMgr().icon('rename'))
-        self.main_layout.addLayout(dividers.DividerLayout())
-        self.main_layout.addWidget(self._rename_btn)
-
     def setup_signals(self):
         self._rules_list.itemSelectionChanged.connect(self._on_item_selection_changed)
         self._rename_btn.clicked.connect(self._on_do_rename)
