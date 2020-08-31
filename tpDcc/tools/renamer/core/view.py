@@ -239,27 +239,6 @@ class RenamerView(base.BaseWidget, object):
 
         self._node_types_combo.setCurrentText(value)
 
-    # def _get_filter_type(self):
-    #     """
-    #     Returns filter type selected by user
-    #     :return: str or None
-    #     """
-    #
-    #     filter_type = None
-    #     if self._node_types_combo.currentText() in tp.Dcc.TYPE_FILTERS:
-    #         filter_type = self._node_types_combo.currentText()
-    #
-    #     return filter_type
-
-    def _on_simple_rename(self, new_name=None):
-        if new_name:
-            objs_to_rename = self._get_objects_to_rename()
-            self._client.simple_rename(new_name, rename_shape=rename_shape, nodes=objs_to_rename)
-
-
-        # if new_name:
-        #     objs_to_rename = self._get_objects_to_rename() or list()
-
 
 class ManualRenameWidget(base.BaseWidget, object):
 
