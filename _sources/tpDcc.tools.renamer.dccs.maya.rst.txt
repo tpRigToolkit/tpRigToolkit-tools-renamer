@@ -1,0 +1,18 @@
+tpDcc.tools.renamer.dccs.maya package
+=====================================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   tpDcc.tools.renamer.dccs.maya.renamerserver
+
+Module contents
+---------------
+
+.. automodule:: tpDcc.tools.renamer.dccs.maya
+   :members:
+   :undoc-members:
+   :show-inheritance:

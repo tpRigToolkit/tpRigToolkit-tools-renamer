@@ -1,0 +1,7 @@
+tpDcc.tools.renamer.core.model module
+=====================================
+
+.. automodule:: tpDcc.tools.renamer.core.model
+   :members:
+   :undoc-members:
+   :show-inheritance:

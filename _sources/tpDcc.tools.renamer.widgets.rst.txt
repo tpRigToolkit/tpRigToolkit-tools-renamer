@@ -13,7 +13,6 @@ Submodules
    tpDcc.tools.renamer.widgets.namespacewidget
    tpDcc.tools.renamer.widgets.numbersidewidget
    tpDcc.tools.renamer.widgets.prefixsuffixwidget
-   tpDcc.tools.renamer.widgets.renamer
    tpDcc.tools.renamer.widgets.renamerwidget
    tpDcc.tools.renamer.widgets.replacerwidget
    tpDcc.tools.renamer.widgets.utilswidget

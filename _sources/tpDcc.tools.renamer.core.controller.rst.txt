@@ -1,7 +1,7 @@
-tpDcc.tools.renamer.widgets.renamer module
+tpDcc.tools.renamer.core.controller module
 ==========================================
 
-.. automodule:: tpDcc.tools.renamer.widgets.renamer
+.. automodule:: tpDcc.tools.renamer.core.controller
    :members:
    :undoc-members:
    :show-inheritance:
