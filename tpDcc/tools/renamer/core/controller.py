@@ -11,17 +11,27 @@ import traceback
 
 import tpDcc as tp
 from tpDcc.libs.python import strings
+from tpDcc.libs.nameit.core import namelib
 from tpDcc.tools.renamer.core import utils
 
 LOGGER = tp.LogsMgr().get_logger('tpDcc-tools-renamer')
 
 
 class RenamerController(object):
-    def __init__(self, client, model):
+    def __init__(self, naming_lib, client, model):
         super(RenamerController, self).__init__()
 
         self._client = client
         self._model = model
+
+        if naming_lib:
+            self._naming_lib = naming_lib
+        else:
+            self._naming_lib = namelib.NameLib(naming_file=self._model.names_config.get_path())
+
+    @property
+    def naming_lib(self):
+        return self._naming_lib
 
     @property
     def client(self):
@@ -131,6 +141,134 @@ class RenamerController(object):
             generated_names.append(preview_name)
 
         return generated_names
+
+    def update_rules(self):
+        if not self._naming_lib:
+            return list()
+
+        self._model.rules = self._naming_lib.rules
+        self._model.active_rule = self._naming_lib.active_rule()
+        self._model.tokens = self._naming_lib.tokens
+
+    def change_selected_rule(self, current_item, prev_item):
+        if not current_item or not hasattr(current_item, 'rule'):
+            self._model.active_rule = None
+            return
+
+        active_rule = current_item.rule
+        if not active_rule:
+            self._model.active_rule = None
+            return
+
+        self._model.active_rule = active_rule
+
+    @tp.Dcc.get_undo_decorator()
+    def auto_rename(self, tokens_dict):
+
+        if not tp.is_maya():
+            LOGGER.warning('Auto renaming feature is only available in Maya for now ...')
+            return False
+
+        import tpDcc.dccs.maya as maya
+
+        active_rule = self._model.active_rule
+        if not active_rule:
+            LOGGER.warning('Impossible to auto rename because no active rule defined.')
+            return False
+
+        rule_name = active_rule.name
+
+        hierarchy_check = self._model.hierarchy_check
+        selection_type = self._model.selection_type
+        rename_shape = self._model.rename_shape
+
+        objs_to_rename = utils.get_objects_to_rename(
+            hierarchy_check=hierarchy_check, selection_type=selection_type, uuid=False) or list()
+        if not objs_to_rename:
+            LOGGER.warning('No objects to rename. Please select at least one object!')
+            return False
+        # generated_names = self.generate_names(items=objs_to_rename, **kwargs)
+
+        if not self._naming_lib.has_rule(rule_name):
+            return False
+
+        current_rule = self._naming_lib.active_rule()
+
+        self._naming_lib.set_active_rule(rule_name)
+
+        # TODO: Naming config should be define the name of the rule to use when using auto renaming
+        solved_names = dict()
+        if rule_name == 'node' and self._model.config:
+            auto_suffix = self._model.naming_config.get('auto_suffixes', default=dict())
+            if auto_suffix:
+                solved_names = dict()
+                for obj_name in objs_to_rename:
+                    obj_uuid = maya.cmds.ls(obj_name, uuid=True)[0]
+                    if obj_uuid in solved_names:
+                        tp.logger.warning(
+                            'Node with name: "{} and UUID "{}" already renamed to "{}"! Skipping ...'.format(
+                                obj_name, obj_uuid, solved_names[obj_name]))
+                        continue
+
+                    # TODO: This code is a duplicated version of the one in
+                    #  tpDcc.dccs.maya.core.name.auto_suffix_object function. Move this code to a DCC specific function
+                    obj_type = maya.cmds.objectType(obj_name)
+                    if obj_type == 'transform':
+                        shape_nodes = maya.cmds.listRelatives(obj_name, shapes=True, fullPath=True)
+                        if not shape_nodes:
+                            obj_type = 'group'
+                        else:
+                            obj_type = maya.cmds.objectType(shape_nodes[0])
+                    elif obj_type == 'joint':
+                        shape_nodes = maya.cmds.listRelatives(obj_name, shapes=True, fullPath=True)
+                        if shape_nodes and maya.cmds.objectType(shape_nodes[0]) == 'nurbsCurve':
+                            obj_type = 'controller'
+                    if obj_type == 'nurbsCurve':
+                        connections = maya.cmds.listConnections('{}.message'.format(obj_name))
+                        if connections:
+                            for node in connections:
+                                if maya.cmds.nodeType(node) == 'controller':
+                                    obj_type = 'controller'
+                                    break
+                    if obj_type not in auto_suffix:
+                        rule_name = 'node'
+                        node_type = obj_type
+                    else:
+                        rule_name = auto_suffix[obj_type]
+                        node_type = auto_suffix[obj_type]
+
+                    if 'node_type' in tokens_dict and tokens_dict['node_type']:
+                        node_type = tokens_dict.pop('node_type')
+                    node_name = tp.Dcc.node_short_name(obj_name)
+                    description = tokens_dict['description'] if (
+                            'description' in tokens_dict and tokens_dict['description']) else node_name
+                    side = tokens_dict.get('side', None)
+                    solved_name = self._naming_lib.solve(
+                        description, side=side, node_type=node_type)
+                    if not solved_name:
+                        continue
+                    solved_name = tp.Dcc.find_unique_name(solved_name)
+                    solved_names[obj_uuid] = solved_name
+
+        if solved_names:
+            for obj_id, solved_name in solved_names.items():
+                obj_name = maya.cmds.ls(obj_id, long=True)[0]
+                tp.Dcc.rename_node(obj_name, solved_name, uuid=obj_id, rename_shape=rename_shape)
+        else:
+            for obj_name in objs_to_rename:
+                solve_name = self._naming_lib.solve(**tokens_dict)
+                if not solve_name:
+                    LOGGER.warning(
+                        'Impossible to rename "{}" with rule "{}" | "{}"'.format(obj_name, rule_name, tokens_dict))
+                    continue
+                try:
+                    tp.Dcc.rename_node(obj_name, solve_name, rename_shape=rename_shape)
+                except Exception as exc:
+                    LOGGER.error('Impossible to rename "{}" to "{}" | {}'.format(obj_name, solve_name, exc))
+                    continue
+
+            if current_rule:
+                self._naming_lib.set_active_rule(current_rule.name)
 
     @tp.Dcc.get_undo_decorator()
     def rename(self, **kwargs):

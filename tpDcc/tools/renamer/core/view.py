@@ -13,12 +13,10 @@ from Qt.QtWidgets import *
 import tpDcc as tp
 from tpDcc.libs.qt.core import base
 from tpDcc.libs.qt.widgets import layouts, dividers, splitter, buttons, combobox, checkbox, tabs, stack
-from tpDcc.libs.qt.widgets import accordion
 
-from tpDcc.tools.renamer.widgets import renamerwidget, prefixsuffixwidget, categorywidget, numbersidewidget
-from tpDcc.tools.renamer.widgets import namespacewidget, replacerwidget, utilswidget
+from tpDcc.tools.renamer.widgets import manualrenamewidget, autorenamewidget, categorywidget
 
-logger = tp.LogsMgr().get_logger('tpDcc-tools-renamer')
+LOGGER = tp.LogsMgr().get_logger('tpDcc-tools-renamer')
 
 
 class RenamerView(base.BaseWidget, object):
@@ -91,12 +89,13 @@ class RenamerView(base.BaseWidget, object):
         self._rename_tab = tabs.BaseTabWidget(parent=self)
         self._splitter.addWidget(self._rename_tab)
 
-        self._manual_rename_widget = ManualRenameWidget(model=self._model, controller=self._controller, parent=self)
-        # self._auto_rename_widget = AutoRenameWidget(parent=self)
-        # # self.auto_rename_widget = AutoRenameWidget(naming_lib=self._name_lib)
+        self._manual_rename_widget = manualrenamewidget.ManualRenameWidget(
+            model=self._model, controller=self._controller, parent=self)
+        self._auto_rename_widget = autorenamewidget.AutoRenameWidget(
+            model=self._model, controller=self._controller, parent=self)
 
         self._rename_tab.addTab(self._manual_rename_widget, 'Manual')
-        # self._rename_tab.addTab(self._auto_rename_widget, 'Auto')
+        self._rename_tab.addTab(self._auto_rename_widget, 'Auto')
 
         self._stack = stack.SlidingStackedWidget()
         # splitter_right_widget = QWidget()
@@ -137,11 +136,6 @@ class RenamerView(base.BaseWidget, object):
         self._model.hierarchyCheckChanged.connect(self._on_toggle_hierarchy_cbx)
         self._model.renameShapeChanged.connect(self._on_toggle_auto_rename_shape_cbx)
         self._model.filterTypeChanged.connect(self._on_filter_type_changed)
-
-        # self._manual_rename_widget.doName.connect(self._controller.rename_simple)
-        # self._manual_rename_widget.doAddPrefix.connect(self._controller.add_prefix)
-        # self._manual_rename_widget.doRemovePrefix.connect(self._controller.remove_prefix)
-        # self._manual_rename_widget.doRemoveFirst.connect(self._controller.remove_first)
 
     def refresh(self):
         """
@@ -190,6 +184,8 @@ class RenamerView(base.BaseWidget, object):
                 # category_widget.doRename.connect(self._on_rename)
                 # category_btn.clicked.connect(partial(self._on_category_selected, i + 1))
 
+        self._controller.update_rules()
+
     def _on_stack_anim_finished(self, index):
         """
         Internal callback function that is called when stack animation is completed
@@ -213,7 +209,7 @@ class RenamerView(base.BaseWidget, object):
         if tab_index != 1:
             return
 
-        self._auto_rename_widget.update_rules()
+        self._controller.update_rules()
 
     def _on_toggle_hierarchy_cbx(self, flag):
         """
@@ -238,121 +234,3 @@ class RenamerView(base.BaseWidget, object):
         """
 
         self._node_types_combo.setCurrentText(value)
-
-
-class ManualRenameWidget(base.BaseWidget, object):
-
-    renameUpdate = Signal()
-    replaceUpdate = Signal()
-
-    def __init__(self, model, controller, parent=None):
-
-        self._model = model
-        self._controller = controller
-
-        super(ManualRenameWidget, self).__init__(parent=parent)
-
-    def ui(self):
-        super(ManualRenameWidget, self).ui()
-
-        manual_accordion = accordion.AccordionWidget()
-        self.main_layout.addWidget(manual_accordion)
-
-        self._renamer_widget = renamerwidget.renamer_widget(client=self._controller.client, parent=self)
-        self._prefix_suffix_widget = prefixsuffixwidget.preffix_suffix_widget(
-            client=self._controller.client, config=self._model.config, parent=self)
-        self._number_side_widget = numbersidewidget.number_side_widget(client=self._controller.client, parent=self)
-        self._namespace_widget = None
-        if tp.is_maya():
-            self._namespace_widget = namespacewidget.namespace_widget(client=self._controller.client, parent=self)
-        self._replacer_widget = replacerwidget.replacer_widget(client=self._controller.client, parent=self)
-        self._utils_widget = utilswidget.utils_widget(client=self._controller.client, parent=self)
-
-        manual_accordion.add_item('Name', self._renamer_widget)
-        manual_accordion.add_item('Prefix/Suffix', self._prefix_suffix_widget)
-        manual_accordion.add_item('Number & Side', self._number_side_widget)
-        if self._namespace_widget:
-            manual_accordion.add_item('Namespace', self._namespace_widget)
-        manual_accordion.add_item('Search & Replace', self._replacer_widget)
-        manual_accordion.add_item('Utils', self._utils_widget)
-
-        self._rename_btn = buttons.BaseButton('Rename')
-        self._rename_btn.setIcon(tp.ResourcesMgr().icon('rename'))
-        self.main_layout.addLayout(dividers.DividerLayout())
-        self.main_layout.addWidget(self._rename_btn)
-
-    def setup_signals(self):
-        self._model.globalAttributeChanged.connect(self._on_updated_global_attribute)
-        self._rename_btn.clicked.connect(self._on_rename)
-
-    def _on_updated_global_attribute(self):
-
-        global_attributes_dict = {
-            'selection_type': self._model.selection_type,
-            'filter_type': self._model.filter_type,
-            'hierarchy_check': self._model.hierarchy_check,
-            'rename_shape': self._model.rename_shape,
-            'only_selection': True if self._model.selection_type == 0 else False
-        }
-
-        for widget in [self._renamer_widget, self._prefix_suffix_widget, self._number_side_widget,
-                       self._namespace_widget, self._replacer_widget, self._utils_widget]:
-            if not widget:
-                continue
-            widget.model.global_data = global_attributes_dict
-
-    def _on_rename(self):
-
-        models_data = dict()
-
-        for widget in [self._renamer_widget, self._prefix_suffix_widget, self._number_side_widget,
-                       self._namespace_widget, self._replacer_widget]:
-            if not widget:
-                continue
-
-            renaming_data = widget.model.rename_settings
-            models_data.update(renaming_data)
-
-        return self._controller.rename(**models_data)
-
-
-class AutoRenameWidget(base.BaseWidget, object):
-    def __init__(self, parent=None):
-        super(AutoRenameWidget, self).__init__(parent=parent)
-
-    def ui(self):
-        super(AutoRenameWidget, self).ui()
-
-        main_splitter = QSplitter(Qt.Horizontal)
-        main_splitter.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        self.main_layout.addWidget(main_splitter)
-
-        auto_widget = QWidget()
-        auto_layout = layouts.VerticalLayout(spacing=0, margins=(0, 0, 0, 0))
-        auto_widget.setLayout(auto_layout)
-        main_splitter.addWidget(auto_widget)
-
-        self._rules_list = QTreeWidget(self)
-        self._rules_list.setHeaderHidden(True)
-        self._rules_list.setSortingEnabled(True)
-        self._rules_list.setRootIsDecorated(False)
-        self._rules_list.setSelectionMode(QAbstractItemView.SingleSelection)
-        self._rules_list.sortByColumn(0, Qt.AscendingOrder)
-        self._rules_list.setUniformRowHeights(True)
-        self._rules_list.setAlternatingRowColors(True)
-
-        auto_layout.addWidget(self._rules_list)
-
-        auto_w = QWidget()
-        self.auto_l = layouts.VerticalLayout(spacing=0, margins=(0, 0, 0, 0))
-        auto_w.setLayout(self.auto_l)
-        auto_w.setMinimumWidth(200)
-        main_splitter.addWidget(auto_w)
-
-        self.main_auto_layout = QFormLayout()
-        self.auto_l.addLayout(self.main_auto_layout)
-
-        self._rename_btn = buttons.BaseButton('Rename')
-        self._rename_btn.setIcon(tp.ResourcesMgr().icon('rename'))
-        self.main_layout.addLayout(dividers.DividerLayout())
-        self.main_layout.addWidget(self._rename_btn)

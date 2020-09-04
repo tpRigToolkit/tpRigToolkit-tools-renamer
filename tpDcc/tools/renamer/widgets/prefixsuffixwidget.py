@@ -562,10 +562,11 @@ class PrefixSuffixWidgetController(object):
         )
 
 
-def preffix_suffix_widget(client, config=None, parent=None):
-    config = config or tp.ToolsMgr().get_tool_config('tpDcc-tools-renamer')
+def preffix_suffix_widget(client, naming_config=None, parent=None):
+    if not naming_config:
+        naming_config = tp.ConfigsMgr().get_config(config_name='tpDcc-naming')
 
-    model = PrefixSuffixWidgetModel(config=config)
+    model = PrefixSuffixWidgetModel(config=naming_config)
     controller = PrefixSuffixWidgetController(client=client, model=model)
     view = PrefixSuffixView(model=model, controller=controller, parent=parent)
 

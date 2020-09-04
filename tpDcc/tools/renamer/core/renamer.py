@@ -41,6 +41,16 @@ class RenamerTool(tool.DccTool, object):
             'tags': ['tpDcc', 'dcc', 'tool', 'renamer'],
             'logger_dir': os.path.join(os.path.expanduser('~'), 'tpDcc', 'logs', 'tools'),
             'logger_level': 'INFO',
+            'is_checkable': False,
+            'is_checked': False,
+            'menu_ui': {'label': 'Renamer', 'load_on_startup': False, 'color': '', 'background_color': ''},
+            'menu': [
+                {'label': 'Renamer',
+                 'type': 'menu', 'children': [{'id': TOOL_ID, 'type': 'tool'}]}],
+            'shelf': [
+                {'name': 'Renamer',
+                 'children': [{'id': TOOL_ID, 'display_label': False, 'type': 'tool'}]}
+            ]
         }
         base_tool_config.update(tool_config)
 
@@ -55,9 +65,14 @@ class RenamerToolsetWidget(toolset.ToolsetWidget, object):
 
     def __init__(self, *args, **kwargs):
 
+        self._names_config = kwargs.get('names_config', None)
         self._naming_config = kwargs.get('naming_config', None)
         self._naming_lib = kwargs.get('naming_lib', None)
         self._dev = kwargs.get('dev', False)
+
+        if not self._names_config:
+            self._names_config = tp.ConfigsMgr().get_config(
+                config_name='tpDcc-naming', environment='development' if self._dev else 'production')
 
         if not self._naming_config:
             self._naming_config = tp.ConfigsMgr().get_config(
@@ -90,8 +105,9 @@ class RenamerToolsetWidget(toolset.ToolsetWidget, object):
         from tpDcc.tools.renamer.core import model, view, controller
 
         renamer_model = model.RenamerModel(
-            config=self.CONFIG, naming_config=self._naming_config, naming_lib=self._naming_lib)
-        renamer_controller = controller.RenamerController(client=self._client, model=renamer_model)
+            config=self.CONFIG, names_config=self._names_config, naming_config=self._naming_config)
+        renamer_controller = controller.RenamerController(
+            naming_lib=self._naming_lib, client=self._client, model=renamer_model)
         renamer_view = view.RenamerView(
             model=renamer_model, controller=renamer_controller, parent=self)
 

@@ -8,11 +8,10 @@ Widget that contains manual rename widgets for tpRenamer
 from __future__ import print_function, division, absolute_import
 
 from Qt.QtCore import *
-from Qt.QtWidgets import *
 
-import tpDcc
+import tpDcc as tp
 from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import accordion, dividers
+from tpDcc.libs.qt.widgets import accordion, dividers, buttons
 
 from tpDcc.tools.renamer.widgets import renamerwidget, replacerwidget, prefixsuffixwidget, numbersidewidget
 from tpDcc.tools.renamer.widgets import namespacewidget, utilswidget
@@ -20,54 +19,75 @@ from tpDcc.tools.renamer.widgets import namespacewidget, utilswidget
 
 class ManualRenameWidget(base.BaseWidget, object):
 
-    def setup_signals(self):
-        self._renamer_widget.renameUpdate.connect(self.renameUpdate.emit)
-        self._renamer_widget.doName.connect(self.doName.emit)
-        self._prefix_suffix_widget.renameUpdate.connect(self.renameUpdate.emit)
-        self._number_side_widget.renameUpdate.connect(self.renameUpdate.emit)
+    renameUpdate = Signal()
+    replaceUpdate = Signal()
+
+    def __init__(self, model, controller, parent=None):
+
+        self._model = model
+        self._controller = controller
+
+        super(ManualRenameWidget, self).__init__(parent=parent)
+
+    def ui(self):
+        super(ManualRenameWidget, self).ui()
+
+        manual_accordion = accordion.AccordionWidget()
+        self.main_layout.addWidget(manual_accordion)
+
+        self._renamer_widget = renamerwidget.renamer_widget(client=self._controller.client, parent=self)
+        self._prefix_suffix_widget = prefixsuffixwidget.preffix_suffix_widget(
+            client=self._controller.client, naming_config=self._model.naming_config, parent=self)
+        self._number_side_widget = numbersidewidget.number_side_widget(client=self._controller.client, parent=self)
+        self._namespace_widget = None
+        if tp.is_maya():
+            self._namespace_widget = namespacewidget.namespace_widget(client=self._controller.client, parent=self)
+        self._replacer_widget = replacerwidget.replacer_widget(client=self._controller.client, parent=self)
+        self._utils_widget = utilswidget.utils_widget(client=self._controller.client, parent=self)
+
+        manual_accordion.add_item('Name', self._renamer_widget)
+        manual_accordion.add_item('Prefix/Suffix', self._prefix_suffix_widget)
+        manual_accordion.add_item('Number & Side', self._number_side_widget)
         if self._namespace_widget:
-            self._namespace_widget.renameUpdate.connect(self.renameUpdate.emit)
-        self._replacer_widget.replaceUpdate.connect(self.replaceUpdate.emit)
-        self._replacer_widget.doSearchReplace.connect(self.doSearchReplace.emit)
-        self._prefix_suffix_widget.doAddPrefix.connect(self.doAddPrefix.emit)
-        self._prefix_suffix_widget.doAddSuffix.connect(self.doAddSuffix.emit)
-        self._prefix_suffix_widget.doRemovePrefix.connect(self.doRemovePrefix.emit)
-        self._prefix_suffix_widget.doRemoveSuffix.connect(self.doRemoveSuffix.emit)
-        self._prefix_suffix_widget.doRemoveFirst.connect(self.doRemoveFirst.emit)
-        self._prefix_suffix_widget.doRemoveLast.connect(self.doRemoveLast.emit)
-        self._number_side_widget.doReplacePadding.connect(self.doReplacePadding.emit)
-        self._number_side_widget.doAppendPadding.connect(self.doAppendPadding.emit)
-        self._number_side_widget.doChangePadding.connect(self.doChangePadding.emit)
-        self._number_side_widget.doSide.connect(self.doSide.emit)
-        self._utils_widget.doAutoSuffix.connect(self.doAutoSuffix.emit)
-        self._utils_widget.doUniqueName.connect(self.doUniqueName.emit)
-        self._utils_widget.doRemoveAllNumbers.connect(self.doRemoveAllNumbers.emit)
-        self._utils_widget.doRemoveTailNumbers.connect(self.doRemoveTailNumbers.emit)
-        self._rename_btn.clicked.connect(self.doRename.emit)
+            manual_accordion.add_item('Namespace', self._namespace_widget)
+        manual_accordion.add_item('Search & Replace', self._replacer_widget)
+        manual_accordion.add_item('Utils', self._utils_widget)
 
-        if tpDcc.is_maya():
-            self._namespace_widget.doAddNamespace.connect(self.doAddNamespace.emit)
-            self._namespace_widget.doRemoveNamespace.connect(self.doRemoveNamespace.emit)
+        self._rename_btn = buttons.BaseButton('Rename')
+        self._rename_btn.setIcon(tp.ResourcesMgr().icon('rename'))
+        self.main_layout.addLayout(dividers.DividerLayout())
+        self.main_layout.addWidget(self._rename_btn)
 
-    def get_rename_settings(self):
-        """
-        Function that returns current rename settings
-        :return: str, str, str, int, bool, bool, str, bool
-        """
+    def setup_signals(self):
+        self._model.globalAttributeChanged.connect(self._on_updated_global_attribute)
+        self._rename_btn.clicked.connect(self._on_rename)
 
-        text = self._renamer_widget.get_rename_settings()
-        prefix, suffix, remove_first, remove_last, joint_end = self._prefix_suffix_widget.get_rename_settings()
-        padding, naming_method, upper, side = self._number_side_widget.get_rename_settings()
+    def _on_updated_global_attribute(self):
 
-        return (
-            text, prefix, suffix, padding, naming_method,
-            upper, side, remove_first, remove_last, joint_end
-        )
+        global_attributes_dict = {
+            'selection_type': self._model.selection_type,
+            'filter_type': self._model.filter_type,
+            'hierarchy_check': self._model.hierarchy_check,
+            'rename_shape': self._model.rename_shape,
+            'only_selection': True if self._model.selection_type == 0 else False
+        }
 
-    def get_replace_settings(self):
-        """
-        Function that returns current replace settings
-        :return: str, str, str, int, bool, bool, str, bool
-        """
+        for widget in [self._renamer_widget, self._prefix_suffix_widget, self._number_side_widget,
+                       self._namespace_widget, self._replacer_widget, self._utils_widget]:
+            if not widget:
+                continue
+            widget.model.global_data = global_attributes_dict
 
-        return self._replacer_widget.get_replace_settings()
+    def _on_rename(self):
+
+        models_data = dict()
+
+        for widget in [self._renamer_widget, self._prefix_suffix_widget, self._number_side_widget,
+                       self._namespace_widget, self._replacer_widget]:
+            if not widget:
+                continue
+
+            renaming_data = widget.model.rename_settings
+            models_data.update(renaming_data)
+
+        return self._controller.rename(**models_data)

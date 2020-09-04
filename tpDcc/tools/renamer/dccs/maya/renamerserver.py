@@ -15,6 +15,7 @@ __email__ = "tpovedatd@gmail.com"
 import tpDcc as tp
 from tpDcc.core import server
 
+import tpDcc.dccs.maya as maya
 from tpDcc.dccs.maya.core import namespace, gui
 
 LOGGER = tp.LogsMgr().get_logger('tpDcc-tools-renamer')
@@ -387,10 +388,23 @@ class RenamerServer(server.DccServer, object):
         if not nodes:
             nodes = tp.Dcc.selected_nodes()
 
+        handles_list = list()
+        for obj in nodes:
+            mobj = maya.OpenMaya.MObject()
+            sel = maya.OpenMaya.MSelectionList()
+            sel.add(obj)
+            sel.getDependNode(0, mobj)
+            handle = maya.OpenMaya.MObjectHandle(mobj)
+            handles_list.append(handle)
+
         new_name = None
-        for node in nodes:
+        for node_handle in handles_list:
+            node = node_handle
             try:
-                obj_short_name = tp.Dcc.node_short_name(node)
+                mobj = node_handle.object()
+                dag_path = maya.OpenMaya.MDagPath.getAPathTo(mobj)
+                node = dag_path.partialPathName()
+                obj_short_name = dag_path.partialPathName()
                 new_name = obj_short_name.replace(search_str, replace_str)
                 tp.Dcc.rename_node(node, new_name)
             except Exception as exc:

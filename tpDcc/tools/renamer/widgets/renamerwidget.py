@@ -14,7 +14,7 @@ from Qt.QtGui import *
 
 import tpDcc as tp
 from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import layouts, dividers, buttons, checkbox, lineedit
+from tpDcc.libs.qt.widgets import layouts, buttons, checkbox, lineedit
 
 from tpDcc.tools.renamer.core import utils
 
