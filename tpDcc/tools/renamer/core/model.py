@@ -25,6 +25,8 @@ class RenamerModel(QObject, object):
     rulesChanged = Signal(list)
     activeRuleChanged = Signal(object)
     tokensChanged = Signal(list)
+    uniqueIdAutoChanged = Signal(bool)
+    lastJointEndAutoChanged = Signal(bool)
 
     def __init__(self, config, names_config, naming_config):
         super(RenamerModel, self).__init__()
@@ -39,6 +41,8 @@ class RenamerModel(QObject, object):
         self._rules = list()
         self._active_rule = None
         self._tokens = list()
+        self._unique_id_auto = True
+        self._last_joint_end_auto = True
 
     @property
     def config(self):
@@ -162,3 +166,21 @@ class RenamerModel(QObject, object):
     def tokens(self, new_tokens):
         self._tokens = python.force_list(new_tokens)
         self.tokensChanged.emit(self._tokens)
+
+    @property
+    def unique_id_auto(self):
+        return self._unique_id_auto
+
+    @unique_id_auto.setter
+    def unique_id_auto(self, flag):
+        self._unique_id_auto = bool(flag)
+        self.uniqueIdAutoChanged.emit(self._unique_id_auto)
+
+    @property
+    def last_joint_end_auto(self):
+        return self._last_joint_end_auto
+
+    @last_joint_end_auto.setter
+    def last_joint_end_auto(self, flag):
+        self._last_joint_end_auto = bool(flag)
+        self.lastJointEndAutoChanged.emit(self._last_joint_end_auto)

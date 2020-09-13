@@ -184,6 +184,8 @@ class RenamerView(base.BaseWidget, object):
                 # category_widget.doRename.connect(self._on_rename)
                 # category_btn.clicked.connect(partial(self._on_category_selected, i + 1))
 
+        self._auto_rename_widget.refresh()
+
         self._controller.update_rules()
 
     def _on_stack_anim_finished(self, index):

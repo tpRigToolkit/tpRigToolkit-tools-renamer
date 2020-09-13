@@ -150,6 +150,12 @@ class RenamerController(object):
         self._model.active_rule = self._naming_lib.active_rule()
         self._model.tokens = self._naming_lib.tokens
 
+    def change_unique_id_auto(self, flag):
+        self._model.unique_id_auto = flag
+
+    def change_last_joint_end_auto(self, flag):
+        self._model.last_joint_end_auto = flag
+
     def change_selected_rule(self, current_item, prev_item):
         if not current_item or not hasattr(current_item, 'rule'):
             self._model.active_rule = None
@@ -163,7 +169,7 @@ class RenamerController(object):
         self._model.active_rule = active_rule
 
     @tp.Dcc.get_undo_decorator()
-    def auto_rename(self, tokens_dict):
+    def auto_rename(self, tokens_dict, unique_id=True, last_joint_end=True):
 
         if not tp.is_maya():
             LOGGER.warning('Auto renaming feature is only available in Maya for now ...')
@@ -202,7 +208,7 @@ class RenamerController(object):
             auto_suffix = self._model.naming_config.get('auto_suffixes', default=dict())
             if auto_suffix:
                 solved_names = dict()
-                for obj_name in objs_to_rename:
+                for i, obj_name in enumerate(reversed(objs_to_rename)):
                     obj_uuid = maya.cmds.ls(obj_name, uuid=True)[0]
                     if obj_uuid in solved_names:
                         tp.logger.warning(
@@ -223,6 +229,10 @@ class RenamerController(object):
                         shape_nodes = maya.cmds.listRelatives(obj_name, shapes=True, fullPath=True)
                         if shape_nodes and maya.cmds.objectType(shape_nodes[0]) == 'nurbsCurve':
                             obj_type = 'controller'
+                        else:
+                            children = tp.Dcc.list_children(obj_name)
+                            if not children and last_joint_end:
+                                obj_type = 'jointEnd'
                     if obj_type == 'nurbsCurve':
                         connections = maya.cmds.listConnections('{}.message'.format(obj_name))
                         if connections:
@@ -243,8 +253,12 @@ class RenamerController(object):
                     description = tokens_dict['description'] if (
                             'description' in tokens_dict and tokens_dict['description']) else node_name
                     side = tokens_dict.get('side', None)
-                    solved_name = self._naming_lib.solve(
-                        description, side=side, node_type=node_type)
+                    if unique_id:
+                        solved_name = self._naming_lib.solve(
+                            description, side=side, node_type=node_type, id=i)
+                    else:
+                        solved_name = self._naming_lib.solve(
+                            description, side=side, node_type=node_type)
                     if not solved_name:
                         continue
                     solved_name = tp.Dcc.find_unique_name(solved_name)

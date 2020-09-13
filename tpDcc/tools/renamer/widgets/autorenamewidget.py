@@ -16,7 +16,7 @@ from Qt.QtWidgets import *
 
 import tpDcc as tp
 from tpDcc.libs.qt.core import base, qtutils
-from tpDcc.libs.qt.widgets import layouts, buttons, dividers, combobox, label, lineedit
+from tpDcc.libs.qt.widgets import layouts, buttons, dividers, combobox, label, lineedit, checkbox
 
 LOGGER = tp.LogsMgr().get_logger('tpDcc-tools-renamer')
 
@@ -30,8 +30,18 @@ class AutoRenameWidget(base.BaseWidget, object):
 
         super(AutoRenameWidget, self).__init__(parent=parent)
 
+        self.refresh()
+
     def ui(self):
         super(AutoRenameWidget, self).ui()
+
+        top_layout = layouts.HorizontalLayout(spacing=2, margins=(0, 0, 0, 0))
+        self._unique_id_cbx = checkbox.BaseCheckBox('Unique Id')
+        self._last_joint_end_cbx = checkbox.BaseCheckBox('Make Last Joint End')
+        top_layout.addStretch()
+        top_layout.addWidget(self._unique_id_cbx)
+        top_layout.addWidget(self._last_joint_end_cbx)
+        self.main_layout.addLayout(top_layout)
 
         main_splitter = QSplitter(Qt.Horizontal)
         main_splitter.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -68,12 +78,20 @@ class AutoRenameWidget(base.BaseWidget, object):
         self.main_layout.addWidget(self._rename_btn)
 
     def setup_signals(self):
+        self._unique_id_cbx.toggled.connect(self._controller.change_unique_id_auto)
+        self._last_joint_end_cbx.toggled.connect(self._controller.change_last_joint_end_auto)
         self._rules_list.currentItemChanged.connect(self._controller.change_selected_rule)
         self._model.globalAttributeChanged.connect(self._on_updated_global_attribute)
         self._rename_btn.clicked.connect(self._on_rename)
 
         self._model.rulesChanged.connect(self._on_update_rules)
         self._model.activeRuleChanged.connect(self._on_update_active_rule)
+        self._model.uniqueIdAutoChanged.connect(self._unique_id_cbx.setChecked)
+        self._model.lastJointEndAutoChanged.connect(self._last_joint_end_cbx.setChecked)
+
+    def refresh(self):
+        self._unique_id_cbx.setChecked(self._model.unique_id_auto)
+        self._last_joint_end_cbx.setChecked(self._model.last_joint_end_auto)
 
     def _add_token(self, token_name, line_layout):
         self.main_auto_layout.addRow(token_name, line_layout)
@@ -199,27 +217,7 @@ class AutoRenameWidget(base.BaseWidget, object):
             token_value = token_value_fn()
             tokens_dict[token_name] = token_value
 
-        return self._controller.auto_rename(tokens_dict)
+        unique_id = self._model.unique_id_auto
+        last_joint_end = self._model.last_joint_end_auto
 
-
-# class AutoRenameWidget(base.BaseWidget, object):
-#     def get_rename_settings(self):
-#         rename_settings = dict()
-#
-#         if not self._token_widgets:
-#             return rename_settings
-#
-#         for token_name, widget in self._token_widgets.items():
-#             if isinstance(widget, list):
-#                 rename_settings[token_name] = widget[0].currentText()
-#             elif isinstance(widget, QLineEdit):
-#                 rename_settings[token_name] = widget.text()
-#
-#         return rename_settings
-
-#     def _on_do_rename(self):
-#         rule_item = self._rules_list.currentItem()
-#         if not rule_item:
-#             return
-#
-#         self.doRename.emit(rule_item.rule.name, self._token_widgets)
+        return self._controller.auto_rename(tokens_dict, unique_id=unique_id, last_joint_end=last_joint_end)

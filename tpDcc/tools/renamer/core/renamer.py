@@ -43,14 +43,7 @@ class RenamerTool(tool.DccTool, object):
             'logger_level': 'INFO',
             'is_checkable': False,
             'is_checked': False,
-            'menu_ui': {'label': 'Renamer', 'load_on_startup': False, 'color': '', 'background_color': ''},
-            'menu': [
-                {'label': 'Renamer',
-                 'type': 'menu', 'children': [{'id': TOOL_ID, 'type': 'tool'}]}],
-            'shelf': [
-                {'name': 'Renamer',
-                 'children': [{'id': TOOL_ID, 'display_label': False, 'type': 'tool'}]}
-            ]
+            'menu_ui': {'label': 'Renamer', 'load_on_startup': False, 'color': '', 'background_color': ''}
         }
         base_tool_config.update(tool_config)
 
