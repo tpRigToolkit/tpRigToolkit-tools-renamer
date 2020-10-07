@@ -250,8 +250,10 @@ class RenamerController(object):
                     if 'node_type' in tokens_dict and tokens_dict['node_type']:
                         node_type = tokens_dict.pop('node_type')
                     node_name = tp.Dcc.node_short_name(obj_name)
-                    description = tokens_dict['description'] if (
-                            'description' in tokens_dict and tokens_dict['description']) else node_name
+                    if 'description' in tokens_dict and tokens_dict['description']:
+                        description = tokens_dict['description']
+                    else:
+                        description = node_name
                     side = tokens_dict.get('side', None)
                     if unique_id:
                         solved_name = self._naming_lib.solve(
