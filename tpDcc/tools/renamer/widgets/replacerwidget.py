@@ -175,7 +175,7 @@ class ReplacerWidgetController(object):
     def change_replace(self, value):
         self._model.replace = value
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def search_and_replace(self):
         global_data = self._model.global_data
         search_str = self._model.search

@@ -113,7 +113,7 @@ class UtilsWidgetController(object):
         self._client = client
         self._model = model
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def automatic_suffix(self):
         global_data = self._model.global_data
         rename_shape = global_data.get('rename_shape', True)
@@ -126,7 +126,7 @@ class UtilsWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def make_unique_name(self):
         global_data = self._model.global_data
         rename_shape = global_data.get('rename_shape', True)
@@ -139,7 +139,7 @@ class UtilsWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def remove_all_numbers(self):
         global_data = self._model.global_data
         rename_shape = global_data.get('rename_shape', True)
@@ -152,7 +152,7 @@ class UtilsWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def remove_trail_numbers(self):
         global_data = self._model.global_data
         rename_shape = global_data.get('rename_shape', True)
@@ -165,7 +165,7 @@ class UtilsWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def clean_unused_namespaces(self):
         return self._client.clean_unused_namespaces()
 

@@ -181,7 +181,7 @@ class NamespaceWidgetController(object):
         elif namespace_option == 1:
             self.remove_namespace()
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def add_replace_namespace(self):
         global_data = self._model.global_data
         namespace = self._model.namespace
@@ -195,7 +195,7 @@ class NamespaceWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def remove_namespace(self):
         global_data = self._model.global_data
         namespace = self._model.namespace

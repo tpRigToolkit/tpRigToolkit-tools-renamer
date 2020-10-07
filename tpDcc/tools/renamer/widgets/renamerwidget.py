@@ -153,7 +153,7 @@ class RenamerWidgetController(object):
     def change_name(self, new_name):
         self._model.name = new_name
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def rename_simple(self):
         global_data = self._model.global_data
         new_name = self._model.name

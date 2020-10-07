@@ -398,7 +398,7 @@ class NumberSideWidgetController(object):
         elif padding_option == 2:
             self.change_padding()
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def replace_padding(self):
         global_data = self._model.global_data
         padding = self._model.padding_value
@@ -412,7 +412,7 @@ class NumberSideWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def append_padding(self):
         global_data = self._model.global_data
         padding = self._model.padding_value
@@ -426,7 +426,7 @@ class NumberSideWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def change_padding(self):
         global_data = self._model.global_data
         padding = self._model.padding_value
@@ -440,7 +440,7 @@ class NumberSideWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def add_side(self):
         global_data = self._model.global_data
         side = self._model.get_side()

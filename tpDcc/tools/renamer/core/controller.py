@@ -168,7 +168,7 @@ class RenamerController(object):
 
         self._model.active_rule = active_rule
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def auto_rename(self, tokens_dict, unique_id=True, last_joint_end=True):
 
         if not tp.is_maya():
@@ -284,7 +284,7 @@ class RenamerController(object):
             if current_rule:
                 self._naming_lib.set_active_rule(current_rule.name)
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def rename(self, **kwargs):
         hierarchy_check = self._model.hierarchy_check
         selection_type = self._model.selection_type

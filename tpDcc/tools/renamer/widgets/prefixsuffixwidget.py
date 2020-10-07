@@ -479,7 +479,7 @@ class PrefixSuffixWidgetController(object):
     def change_selected_suffix(self, index):
         self._model.selected_suffix = index
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def add_prefix(self):
         global_data = self._model.global_data
         new_prefix = self._model.prefix
@@ -493,7 +493,7 @@ class PrefixSuffixWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def remove_prefix(self):
         global_data = self._model.global_data
         rename_shape = global_data.get('rename_shape', True)
@@ -506,7 +506,7 @@ class PrefixSuffixWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def remove_first(self):
         count = self._model.remove_first_value
         global_data = self._model.global_data
@@ -520,7 +520,7 @@ class PrefixSuffixWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def remove_last(self):
         count = self._model.remove_last_value
         global_data = self._model.global_data
@@ -534,7 +534,7 @@ class PrefixSuffixWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def add_suffix(self):
         global_data = self._model.global_data
         new_suffix = self._model.suffix
@@ -548,7 +548,7 @@ class PrefixSuffixWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.get_undo_decorator()
+    @tp.Dcc.undo_decorator()
     def remove_suffix(self):
         global_data = self._model.global_data
         rename_shape = global_data.get('rename_shape', True)
