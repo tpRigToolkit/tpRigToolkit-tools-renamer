@@ -135,7 +135,7 @@ class RenamerModel(QObject, object):
 
     @property
     def node_types(self):
-        return tp.Dcc.TYPE_FILTERS.keys()
+        return tp.Dcc.OBJECT_TYPES.keys()
 
     @property
     def rules(self):
