@@ -7,18 +7,20 @@ Widget that contains auto rename widgets for tpRenamer
 
 from __future__ import print_function, division, absolute_import
 
+import logging
 import traceback
 from functools import partial
 from collections import OrderedDict
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
+from Qt.QtCore import Qt
+from Qt.QtWidgets import QSizePolicy, QWidget, QSplitter, QTreeWidget, QAbstractItemView, QFormLayout, QTreeWidgetItem
+from Qt.QtWidgets import QLabel
 
-import tpDcc as tp
+from tpDcc.managers import resources
 from tpDcc.libs.qt.core import base, qtutils
 from tpDcc.libs.qt.widgets import layouts, buttons, dividers, combobox, label, lineedit, checkbox
 
-LOGGER = tp.LogsMgr().get_logger('tpDcc-tools-renamer')
+LOGGER = logging.getLogger('tpDcc-tools-renamer')
 
 
 class AutoRenameWidget(base.BaseWidget, object):
@@ -73,7 +75,7 @@ class AutoRenameWidget(base.BaseWidget, object):
         self.auto_l.addLayout(self.main_auto_layout)
 
         self._rename_btn = buttons.BaseButton('Rename')
-        self._rename_btn.setIcon(tp.ResourcesMgr().icon('rename'))
+        self._rename_btn.setIcon(resources.icon('rename'))
         self.main_layout.addLayout(dividers.DividerLayout())
         self.main_layout.addWidget(self._rename_btn)
 

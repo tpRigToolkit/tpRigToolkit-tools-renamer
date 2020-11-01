@@ -7,15 +7,13 @@ Module that contains category widget implementation
 
 from __future__ import print_function, division, absolute_import
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
+from Qt.QtCore import Qt, Signal
+from Qt.QtWidgets import QTreeWidget, QAbstractItemView, QTreeWidgetItem, QLabel
 
-import tpDcc as tp
+from tpDcc import dcc
+from tpDcc.managers import resources
 from tpDcc.libs.qt.core import base
-from tpDcc.libs.qt.widgets import search, buttons, dividers
-
-if tp.is_maya():
-    import tpDcc.dccs.maya as maya
+from tpDcc.libs.qt.widgets import layouts, search, buttons, dividers, checkbox
 
 
 class CategoryWidget(base.BaseWidget, object):
@@ -46,11 +44,9 @@ class CategoryWidget(base.BaseWidget, object):
     def ui(self):
         super(CategoryWidget, self).ui()
 
-        filter_layout = QHBoxLayout()
-        filter_layout.setContentsMargins(10, 0, 10, 0)
-        filter_layout.setSpacing(2)
+        filter_layout = layouts.HorizontalLayout(spacing=2, margins=(10, 0, 10, 0))
         self.main_layout.addLayout(filter_layout)
-        refresh_icon = tp.ResourcesMgr().icon('refresh')
+        refresh_icon = resources.icon('refresh')
         self._refresh_list_btn = buttons.IconButton(
             icon=refresh_icon, icon_padding=2, button_style=buttons.ButtonStyles.FlatStyle)
         self._names_filter = search.SearchFindWidget()
@@ -59,9 +55,7 @@ class CategoryWidget(base.BaseWidget, object):
         filter_layout.addWidget(self._names_filter)
         filter_layout.addWidget(self._search_lbl)
 
-        self._types_layout = QHBoxLayout()
-        self._types_layout.setContentsMargins(0, 0, 0, 0)
-        self._types_layout.setSpacing(2)
+        self._types_layout = layouts.HorizontalLayout(spacing=2, margins=(0, 0, 0, 0))
         self.main_layout.addLayout(self._types_layout)
 
         self._names_list = QTreeWidget(self)
@@ -75,42 +69,38 @@ class CategoryWidget(base.BaseWidget, object):
 
         self.main_layout.addWidget(self._names_list)
 
-        bottom_buttons_layout = QHBoxLayout()
+        bottom_buttons_layout = layouts.HorizontalLayout(spacing=2, margins=(2, 2, 2, 2))
         bottom_buttons_layout.setAlignment(Qt.AlignLeft)
-        bottom_buttons_layout.setContentsMargins(2, 2, 2, 2)
-        bottom_buttons_layout.setSpacing(2)
         self.main_layout.addLayout(bottom_buttons_layout)
 
-        preview_icon = tp.ResourcesMgr().icon('preview')
-        self._sort_btn = QPushButton('Sort')
+        preview_icon = resources.icon('preview')
+        self._sort_btn = buttons.BaseButton('Sort', parent=self)
         self._sort_btn.setMinimumWidth(40)
-        self._all_btn = QPushButton('All')
+        self._all_btn = buttons.BaseButton('All', parent=self)
         self._all_btn.setMinimumWidth(40)
-        self._none_btn = QPushButton('None')
+        self._none_btn = buttons.BaseButton('None', parent=self)
         self._none_btn.setMinimumWidth(40)
         bottom_buttons_layout.addWidget(self._sort_btn)
         bottom_buttons_layout.addWidget(self._all_btn)
         bottom_buttons_layout.addWidget(self._none_btn)
 
         bottom_buttons_layout.addWidget(dividers.get_horizontal_separator_widget())
-        self._hide_default_scene_nodes_cbx = QCheckBox('Hide Default Scene Objects')
+        self._hide_default_scene_nodes_cbx = checkbox.BaseCheckBox('Hide Default Scene Objects', parent=self)
         self._hide_default_scene_nodes_cbx.setChecked(True)
         bottom_buttons_layout.addWidget(self._hide_default_scene_nodes_cbx)
 
         self.main_layout.addLayout(dividers.DividerLayout())
 
-        preview_layout = QHBoxLayout()
-        preview_layout.setContentsMargins(0, 0, 0, 0)
-        preview_layout.setSpacing(2)
+        preview_layout = layouts.HorizontalLayout(spacing=2, margins=(0, 0, 0, 0))
         self.main_layout.addLayout(preview_layout)
 
-        self._preview_btn = QPushButton('Preview')
+        self._preview_btn = buttons.BaseButton('Preview', parent=self)
         self._preview_btn.setIcon(preview_icon)
         self._preview_btn.setCheckable(True)
         self._preview_btn.setChecked(True)
         self._preview_btn.setMinimumWidth(100)
         self._preview_btn.setMaximumWidth(100)
-        self._rename_btn = QPushButton('Select objects in the list to rename ...')
+        self._rename_btn = buttons.BaseButton('Select objects in the list to rename ...', parent=self)
         self._rename_btn.setEnabled(False)
         preview_layout.addWidget(self._preview_btn)
         preview_layout.addWidget(self._rename_btn)
@@ -141,13 +131,13 @@ class CategoryWidget(base.BaseWidget, object):
         try:
             objs_names = list()
             if not selected_objects:
-                objs_names.extend(tp.Dcc.all_scene_objects(full_path=True))
+                objs_names.extend(dcc.all_scene_nodes(full_path=True))
             else:
-                objs_names.extend(tp.Dcc.selected_nodes(full_path=True))
+                objs_names.extend(dcc.selected_nodes(full_path=True))
                 if objs_names and hierarchy:
                     children_list = list()
                     for obj in objs_names:
-                        children = tp.Dcc.list_children(obj, all_hierarchy=True, full_path=True)
+                        children = dcc.list_children(obj, all_hierarchy=True, full_path=True)
                         if children:
                             children_list.extend(children)
                     children_list = list(set(children_list))
@@ -163,7 +153,7 @@ class CategoryWidget(base.BaseWidget, object):
                 dcc_type = type_data.get('type', None)
                 dcc_fn = type_data.get('fn', None)
                 dcc_args = type_data.get('args', dict())
-                type_btn = QPushButton(type_name)
+                type_btn = buttons.BaseButton(type_name, parent=self)
                 type_btn.setCheckable(True)
                 type_btn.setProperty('dcc_type', dcc_type)
                 type_btn.setProperty('dcc_fn', dcc_fn)
@@ -174,7 +164,7 @@ class CategoryWidget(base.BaseWidget, object):
                 self._category_buttons.append(type_btn)
                 type_btn.toggled.connect(self._on_toggle_type)
 
-        self._others_btn = QPushButton('Others')
+        self._others_btn = buttons.BaseButton('Others', parent=self)
         self._others_btn.setCheckable(True)
         self._types_layout.addWidget(self._others_btn)
         self._others_btn.toggled.connect(self._on_toggle_type)
@@ -187,20 +177,20 @@ class CategoryWidget(base.BaseWidget, object):
         discard_nodes = self._default_nodes_to_discard[:] or list()
 
         if self._hide_default_scene_nodes_cbx and self._hide_default_scene_nodes_cbx.isChecked():
-            discard_nodes.extend(tp.Dcc.default_scene_nodes(full_path=False))
+            discard_nodes.extend(dcc.default_scene_nodes(full_path=False))
 
-        # discard_nodes.extend(tp.Dcc.list_nodes(node_type='camera'))
+        # discard_nodes.extend(dcc.list_nodes(node_type='camera'))
 
         for btn in self._category_buttons:
             if not btn.isChecked():
                 dcc_type = btn.property('dcc_type')
                 if dcc_type:
-                    discard_nodes.extend(tp.Dcc.list_nodes(node_type=btn.property('dcc_type')))
+                    discard_nodes.extend(dcc.list_nodes(node_type=btn.property('dcc_type')))
                 else:
                     dcc_fn = btn.property('dcc_fn')
                     if dcc_fn:
                         dcc_args = btn.property('dcc_args')
-                        if tp.is_maya():
+                        if dcc.is_maya():
                             valid_args = dict()
                             for arg_name, arg_value in dcc_args.items():
                                 valid_args[str(arg_name)] = arg_value
@@ -219,13 +209,13 @@ class CategoryWidget(base.BaseWidget, object):
                 dcc_fn = btn.property('dcc_fn')
                 if dcc_fn:
                     dcc_args = btn.property('dcc_args')
-                    if tp.is_maya():
+                    if dcc.is_maya():
                         valid_args = dict()
                         for arg_name, arg_value in dcc_args.items():
                             valid_args[str(arg_name)] = arg_value
                         nodes = getattr(maya.cmds, dcc_fn)(**valid_args)
                         for node in nodes:
-                            node_type = tp.Dcc.node_type(node)
+                            node_type = dcc.node_type(node)
                             node_types.add(node_type)
 
         return list(node_types)
@@ -243,27 +233,25 @@ class CategoryWidget(base.BaseWidget, object):
         for obj in nodes:
             if obj in nodes_to_discard:
                 continue
-            node_type = tp.Dcc.node_type(obj)
+            node_type = dcc.node_type(obj)
             if node_type not in self._get_node_types() and not self._others_btn.isChecked():
                 is_valid = False
                 for node_type in self._get_node_types():
-                    is_valid = tp.Dcc.check_object_type(obj, node_type, check_sub_types=True)
+                    is_valid = dcc.check_object_type(obj, node_type, check_sub_types=True)
                     if is_valid:
                         break
                 if not is_valid:
                     continue
 
-            node_name = tp.Dcc.node_short_name(obj)
+            node_name = dcc.node_short_name(obj)
             item = QTreeWidgetItem(self._names_list, [node_name])
             item.obj = node_name
             item.preview_name = ''
             item.full_name = obj
-            if tp.is_maya():
-                mobj = maya.OpenMaya.MObject()
-                sel = maya.OpenMaya.MSelectionList()
+            if dcc.is_maya():
+                sel = api.SelectionList()
                 sel.add(obj)
-                sel.getDependNode(0, mobj)
-                item.handle = maya.OpenMaya.MObjectHandle(mobj)
+                item.handle = maya.OpenMaya.MObjectHandle(sel.get_depend_node(0))
 
             self._names_list.addTopLevelItem(item)
 

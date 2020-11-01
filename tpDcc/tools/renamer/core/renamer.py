@@ -7,18 +7,17 @@ Module that contains core implementation for Renamer Tool
 
 from __future__ import print_function, division, absolute_import
 
-__author__ = "Tomas Poveda"
-__license__ = "MIT"
-__maintainer__ = "Tomas Poveda"
-__email__ = "tpovedatd@gmail.com"
-
 import os
+import logging
 import importlib
 
-import tpDcc as tp
+from tpDcc import dcc
+from tpDcc.managers import configs
 from tpDcc.core import tool
 from tpDcc.libs.qt.widgets import toolset
 from tpDcc.tools.renamer.core import renamerclient
+
+LOGGER = logging.getLogger('tpDcc-tools-renamer')
 
 # Defines ID of the tool
 TOOL_ID = 'tpDcc-tools-renamer'
@@ -64,11 +63,11 @@ class RenamerToolsetWidget(toolset.ToolsetWidget, object):
         self._dev = kwargs.get('dev', False)
 
         if not self._names_config:
-            self._names_config = tp.ConfigsMgr().get_config(
+            self._names_config = configs.get_config(
                 config_name='tpDcc-naming', environment='development' if self._dev else 'production')
 
         if not self._naming_config:
-            self._naming_config = tp.ConfigsMgr().get_config(
+            self._naming_config = configs.get_config(
                 config_name='tpDcc-naming', environment='development' if self._dev else 'production')
 
         super(RenamerToolsetWidget, self).__init__(*args, **kwargs)
@@ -78,8 +77,8 @@ class RenamerToolsetWidget(toolset.ToolsetWidget, object):
         self._client = renamerclient.RenamerClient()
         self._client.signals.dccDisconnected.connect(self._on_dcc_disconnected)
 
-        if not tp.is_standalone():
-            dcc_mod_name = '{}.dccs.{}.renamerserver'.format(TOOL_ID.replace('-', '.'), tp.Dcc.get_name())
+        if not dcc.is_standalone():
+            dcc_mod_name = '{}.dccs.{}.renamerserver'.format(TOOL_ID.replace('-', '.'), dcc.get_name())
             try:
                 mod = importlib.import_module(dcc_mod_name)
                 if hasattr(mod, 'RenamerServer'):
@@ -87,8 +86,8 @@ class RenamerToolsetWidget(toolset.ToolsetWidget, object):
                     self._client.set_server(server)
                     self._update_client()
             except Exception as exc:
-                tp.logger.warning(
-                    'Impossible to launch ControlRig server! Error while importing: {} >> {}'.format(dcc_mod_name, exc))
+                LOGGER.warning(
+                    'Impossible to launch Renamer server! Error while importing: {} >> {}'.format(dcc_mod_name, exc))
                 return
         else:
             self._update_client()
@@ -105,12 +104,3 @@ class RenamerToolsetWidget(toolset.ToolsetWidget, object):
             model=renamer_model, controller=renamer_controller, parent=self)
 
         return [renamer_view]
-
-
-if __name__ == '__main__':
-    import tpDcc
-    import tpDcc.loader
-
-    tpDcc.loader.init(dev=False)
-
-    tpDcc.ToolsMgr().launch_tool_by_id('tpDcc-tools-renamer')

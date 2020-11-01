@@ -7,12 +7,12 @@ Widget that manages replace functionality for tpRenamer
 
 from __future__ import print_function, division, absolute_import
 
+from Qt.QtCore import Qt, Signal, QObject, QRegExp
+from Qt.QtGui import QRegExpValidator
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
-from Qt.QtGui import *
 
-import tpDcc as tp
+from tpDcc import dcc
+from tpDcc.managers import resources
 from tpDcc.libs.qt.core import base
 from tpDcc.libs.qt.widgets import layouts, checkbox, lineedit, buttons
 
@@ -58,10 +58,10 @@ class ReplacerView(base.BaseWidget, object):
         self._replace_line.setValidator(text_validator)
         self._with_line.setValidator(text_validator)
         self._search_replace_btn = buttons.BaseButton(parent=self)
-        self._search_replace_btn.setIcon(tp.ResourcesMgr().icon('find_replace'))
+        self._search_replace_btn.setIcon(resources.icon('find_replace'))
 
         replace_layout.addWidget(self._replace_line)
-        replace_layout.addItem(QSpacerItem(10, 0, QSizePolicy.Fixed, QSizePolicy.Preferred))
+        replace_layout.addStretch()
         replace_layout.addWidget(self._with_line)
         replace_layout.addWidget(self._search_replace_btn)
 
@@ -175,7 +175,7 @@ class ReplacerWidgetController(object):
     def change_replace(self, value):
         self._model.replace = value
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def search_and_replace(self):
         global_data = self._model.global_data
         search_str = self._model.search

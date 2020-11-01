@@ -7,11 +7,13 @@ Widget that manages prefix/suffix rename functionality
 
 from __future__ import print_function, division, absolute_import
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
-from Qt.QtGui import *
+from Qt.QtCore import Qt, Signal, QObject, QRegExp
+from Qt.QtWidgets import QSizePolicy
+from Qt.QtGui import QRegExpValidator
 
-import tpDcc as tp
+from tpDcc import dcc
+from tpDcc.managers import configs, resources
+
 from tpDcc.libs.qt.core import base
 from tpDcc.libs.qt.widgets import layouts, dividers, label, buttons, checkbox, lineedit, combobox, spinbox
 
@@ -56,9 +58,9 @@ class PrefixSuffixView(base.BaseWidget, object):
         prefix_layout.addWidget(self._prefix_line)
         prefix_layout.addWidget(self._prefix_combo)
         self._prefix_btn = buttons.BaseButton(parent=self)
-        self._prefix_btn.setIcon(tp.ResourcesMgr().icon('prefix'))
+        self._prefix_btn.setIcon(resources.icon('prefix'))
         self._remove_prefix_btn = buttons.BaseButton(parent=self)
-        self._remove_prefix_btn.setIcon(tp.ResourcesMgr().icon('trash'))
+        self._remove_prefix_btn.setIcon(resources.icon('trash'))
         prefix_layout.addWidget(self._prefix_btn)
         prefix_layout.addWidget(self._remove_prefix_btn)
 
@@ -72,13 +74,13 @@ class PrefixSuffixView(base.BaseWidget, object):
         self._remove_first_spn.setFocusPolicy(Qt.NoFocus)
         self._remove_first_spn.setMinimum(0)
         self._remove_first_spn.setMaximum(99)
-        last_digits_lbl = QLabel(' digits', parent=self)
+        last_digits_lbl = label.BaseLabel(' digits', parent=self)
         remove_first_layout.addWidget(self._remove_first_lbl)
         remove_first_layout.addWidget(self._remove_first_spn)
         remove_first_layout.addWidget(last_digits_lbl)
         self._remove_first_btn = buttons.BaseButton(parent=self)
-        self._remove_first_btn.setIcon(tp.ResourcesMgr().icon('trash'))
-        remove_first_layout.addItem(QSpacerItem(10, 0, QSizePolicy.Expanding, QSizePolicy.Preferred))
+        self._remove_first_btn.setIcon(resources.icon('trash'))
+        remove_first_layout.addStretch()
         remove_first_layout.addWidget(self._remove_first_btn)
 
         self.main_layout.addWidget(dividers.Divider(parent=self))
@@ -99,9 +101,9 @@ class PrefixSuffixView(base.BaseWidget, object):
         suffix_layout.addWidget(self._suffix_line)
         suffix_layout.addWidget(self._suffix_combo)
         self._suffix_btn = buttons.BaseButton(parent=self)
-        self._suffix_btn.setIcon(tp.ResourcesMgr().icon('suffix'))
+        self._suffix_btn.setIcon(resources.icon('suffix'))
         self._remove_suffix_btn = buttons.BaseButton(parent=self)
-        self._remove_suffix_btn.setIcon(tp.ResourcesMgr().icon('trash'))
+        self._remove_suffix_btn.setIcon(resources.icon('trash'))
         suffix_layout.addWidget(self._suffix_btn)
         suffix_layout.addWidget(self._remove_suffix_btn)
 
@@ -120,8 +122,8 @@ class PrefixSuffixView(base.BaseWidget, object):
         remove_last_layout.addWidget(self._remove_last_spn)
         remove_last_layout.addWidget(last_digits_lbl2)
         self._remove_last_btn = buttons.BaseButton()
-        self._remove_last_btn.setIcon(tp.ResourcesMgr().icon('trash'))
-        remove_last_layout.addItem(QSpacerItem(10, 0, QSizePolicy.Expanding, QSizePolicy.Preferred))
+        self._remove_last_btn.setIcon(resources.icon('trash'))
+        remove_last_layout.addStretch()
         remove_last_layout.addWidget(self._remove_last_btn)
 
         # last_joint_layout = QHBoxLayout()
@@ -421,7 +423,7 @@ class PrefixSuffixWidgetModel(QObject, object):
 
         suffixes = self._config.get('suffixes', default=list())
         if not suffixes:
-            naming_config = tp.ConfigsMgr().get_config('tpDcc-naming')
+            naming_config = configs.get_config('tpDcc-naming')
             if naming_config:
                 suffixes = naming_config.get('suffixes', default=dict())
 
@@ -479,7 +481,7 @@ class PrefixSuffixWidgetController(object):
     def change_selected_suffix(self, index):
         self._model.selected_suffix = index
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def add_prefix(self):
         global_data = self._model.global_data
         new_prefix = self._model.prefix
@@ -493,7 +495,7 @@ class PrefixSuffixWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def remove_prefix(self):
         global_data = self._model.global_data
         rename_shape = global_data.get('rename_shape', True)
@@ -506,7 +508,7 @@ class PrefixSuffixWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def remove_first(self):
         count = self._model.remove_first_value
         global_data = self._model.global_data
@@ -520,7 +522,7 @@ class PrefixSuffixWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def remove_last(self):
         count = self._model.remove_last_value
         global_data = self._model.global_data
@@ -534,7 +536,7 @@ class PrefixSuffixWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def add_suffix(self):
         global_data = self._model.global_data
         new_suffix = self._model.suffix
@@ -548,7 +550,7 @@ class PrefixSuffixWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def remove_suffix(self):
         global_data = self._model.global_data
         rename_shape = global_data.get('rename_shape', True)
@@ -564,7 +566,7 @@ class PrefixSuffixWidgetController(object):
 
 def preffix_suffix_widget(client, naming_config=None, parent=None):
     if not naming_config:
-        naming_config = tp.ConfigsMgr().get_config(config_name='tpDcc-naming')
+        naming_config = configs.get_config(config_name='tpDcc-naming')
 
     model = PrefixSuffixWidgetModel(config=naming_config)
     controller = PrefixSuffixWidgetController(client=client, model=model)

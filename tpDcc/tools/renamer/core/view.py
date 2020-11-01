@@ -7,16 +7,19 @@ Renamer widget view class implementation
 
 from __future__ import print_function, division, absolute_import
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
+import logging
 
-import tpDcc as tp
+from Qt.QtCore import Qt
+from Qt.QtWidgets import QSizePolicy, QButtonGroup, QSpacerItem
+
+from tpDcc import dcc
+from tpDcc.managers import resources
 from tpDcc.libs.qt.core import base
 from tpDcc.libs.qt.widgets import layouts, dividers, splitter, buttons, combobox, checkbox, tabs, stack
 
 from tpDcc.tools.renamer.widgets import manualrenamewidget, autorenamewidget, categorywidget
 
-LOGGER = tp.LogsMgr().get_logger('tpDcc-tools-renamer')
+LOGGER = logging.getLogger('tpDcc-tools-renamer')
 
 
 class RenamerView(base.BaseWidget, object):
@@ -66,7 +69,7 @@ class RenamerView(base.BaseWidget, object):
         self._auto_rename_shapes_cbx = None
         self._auto_rename_shapes_cbx = checkbox.BaseCheckBox('Auto Rename Shapes', parent=self)
         self._auto_rename_shapes_cbx.setChecked(True)
-        if not tp.is_maya():
+        if not dcc.is_maya():
             self._auto_rename_shapes_cbx.setVisible(False)
             self._auto_rename_shapes_cbx.setEnabled(False)
 
@@ -154,13 +157,13 @@ class RenamerView(base.BaseWidget, object):
         else:
             self._node_types_combo.setVisible(True)
             for node_type in node_types:
-                self._node_types_combo.addItem(node_type)
+                self._node_types_combo.addItem(str(node_type).split('.')[-1])
 
         categories = self._model.categories or dict()
         nodes_to_discard = self._model.nodes_to_discard
         types_to_discard = self._model.types_to_discard
         for node_type in types_to_discard:
-            nodes_to_discard.extend(tp.Dcc.list_nodes(node_type=node_type))
+            nodes_to_discard.extend(dcc.list_nodes(node_type=node_type))
 
         for i, category in enumerate(categories):
             for category_name, category_data in category.items():
@@ -170,7 +173,7 @@ class RenamerView(base.BaseWidget, object):
                 category_btn = buttons.BaseButton(title)
                 category_btn.setCheckable(True)
                 if icon:
-                    category_btn.setIcon(tp.ResourcesMgr().icon(icon))
+                    category_btn.setIcon(resources.icon(icon))
                 if i == 0:
                     category_btn.setChecked(True)
                 self._buttons_grp.addButton(category_btn)

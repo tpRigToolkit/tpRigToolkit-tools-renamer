@@ -7,9 +7,10 @@ Widget that contains manual rename widgets for tpRenamer
 
 from __future__ import print_function, division, absolute_import
 
-from Qt.QtCore import *
+from Qt.QtCore import Signal
 
-import tpDcc as tp
+from tpDcc import dcc
+from tpDcc.managers import resources
 from tpDcc.libs.qt.core import base
 from tpDcc.libs.qt.widgets import accordion, dividers, buttons
 
@@ -40,7 +41,7 @@ class ManualRenameWidget(base.BaseWidget, object):
             client=self._controller.client, naming_config=self._model.naming_config, parent=self)
         self._number_side_widget = numbersidewidget.number_side_widget(client=self._controller.client, parent=self)
         self._namespace_widget = None
-        if tp.is_maya():
+        if dcc.is_maya():
             self._namespace_widget = namespacewidget.namespace_widget(client=self._controller.client, parent=self)
         self._replacer_widget = replacerwidget.replacer_widget(client=self._controller.client, parent=self)
         self._utils_widget = utilswidget.utils_widget(client=self._controller.client, parent=self)
@@ -54,7 +55,7 @@ class ManualRenameWidget(base.BaseWidget, object):
         manual_accordion.add_item('Utils', self._utils_widget)
 
         self._rename_btn = buttons.BaseButton('Rename')
-        self._rename_btn.setIcon(tp.ResourcesMgr().icon('rename'))
+        self._rename_btn.setIcon(resources.icon('rename'))
         self.main_layout.addLayout(dividers.DividerLayout())
         self.main_layout.addWidget(self._rename_btn)
 

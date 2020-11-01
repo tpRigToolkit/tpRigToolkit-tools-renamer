@@ -7,12 +7,12 @@ Widget that manages namespace rename functionality
 
 from __future__ import print_function, division, absolute_import
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
+from Qt.QtCore import Qt, Signal, QObject
+from Qt.QtWidgets import QSizePolicy
 
-import tpDcc as tp
+from tpDcc import dcc
+from tpDcc.managers import resources
 from tpDcc.libs.qt.core import base
-
 from tpDcc.libs.qt.widgets import layouts, checkbox, lineedit, combobox, buttons
 
 
@@ -49,7 +49,7 @@ class NamespaceView(base.BaseWidget, object):
         self._namespace_line.setPlaceholderText('Namespace')
         self._namespace_combo = combobox.BaseComboBox(parent=self)
         self._namespace_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self._combo_icons = [tp.ResourcesMgr().icon('add'), tp.ResourcesMgr().icon('trash')]
+        self._combo_icons = [resources.icon('add'), resources.icon('trash')]
         self._namespace_btn = buttons.BaseButton(parent=self)
         self._namespace_btn.setIcon(self._combo_icons[0])
         namespace_layout.addWidget(self._namespace_cbx)
@@ -181,7 +181,7 @@ class NamespaceWidgetController(object):
         elif namespace_option == 1:
             self.remove_namespace()
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def add_replace_namespace(self):
         global_data = self._model.global_data
         namespace = self._model.namespace
@@ -195,7 +195,7 @@ class NamespaceWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def remove_namespace(self):
         global_data = self._model.global_data
         namespace = self._model.namespace

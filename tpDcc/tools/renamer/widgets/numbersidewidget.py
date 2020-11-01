@@ -9,10 +9,11 @@ from __future__ import print_function, division, absolute_import
 
 from functools import partial
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
+from Qt.QtCore import Qt, Signal, QObject
+from Qt.QtWidgets import QSizePolicy, QButtonGroup
 
-import tpDcc as tp
+from tpDcc import dcc
+from tpDcc.managers import resources
 from tpDcc.libs.qt.core import base
 from tpDcc.libs.qt.widgets import layouts, dividers, label, buttons, checkbox, combobox, spinbox
 
@@ -63,13 +64,13 @@ class NumberSideView(base.BaseWidget, object):
         self._frame_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self._frame_combo.addItems(['Replace', 'Append', 'Change Pad'])
         self._frame_btn = buttons.BaseButton()
-        self._frame_btn.setIcon(tp.ResourcesMgr().icon('numbered_list'))
+        self._frame_btn.setIcon(resources.icon('numbered_list'))
         rename_mult_layout.addWidget(self._frame_pad_lbl)
         rename_mult_layout.addWidget(self._frame_pad_spin)
         rename_mult_layout.addWidget(self._frame_combo)
         lower_upper_grp = QButtonGroup(self)
-        self._lower_radio = QRadioButton('Lower')
-        self._upper_radio = QRadioButton('Upper')
+        self._lower_radio = buttons.BaseRadioButton('Lower', parent=self)
+        self._upper_radio = buttons.BaseRadioButton('Upper', parent=self)
         lower_upper_grp.addButton(self._lower_radio)
         lower_upper_grp.addButton(self._upper_radio)
         self._lower_radio.setVisible(False)
@@ -118,10 +119,10 @@ class NumberSideView(base.BaseWidget, object):
         self._none_side.setChecked(True)
         self._capital_side = checkbox.BaseCheckBox('Capital?', parent=self)
         self._side_btn = buttons.BaseButton(parent=self)
-        self._side_btn.setIcon(tp.ResourcesMgr().icon('font_size'))
-        side_layout.addItem(QSpacerItem(15, 0, QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self._side_btn.setIcon(resources.icon('font_size'))
+        side_layout.addStretch()
         side_layout.addWidget(self._capital_side)
-        side_layout.addItem(QSpacerItem(15, 0, QSizePolicy.Expanding, QSizePolicy.Fixed))
+        side_layout.addStretch()
         side_layout.addWidget(self._side_btn)
 
     def setup_signals(self):
@@ -398,7 +399,7 @@ class NumberSideWidgetController(object):
         elif padding_option == 2:
             self.change_padding()
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def replace_padding(self):
         global_data = self._model.global_data
         padding = self._model.padding_value
@@ -412,7 +413,7 @@ class NumberSideWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def append_padding(self):
         global_data = self._model.global_data
         padding = self._model.padding_value
@@ -426,7 +427,7 @@ class NumberSideWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def change_padding(self):
         global_data = self._model.global_data
         padding = self._model.padding_value
@@ -440,7 +441,7 @@ class NumberSideWidgetController(object):
             only_selection=only_selection, filter_type=filter_type
         )
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def add_side(self):
         global_data = self._model.global_data
         side = self._model.get_side()

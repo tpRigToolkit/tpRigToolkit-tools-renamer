@@ -7,7 +7,7 @@ Module that contains exceptions used by tpRenamer
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc as tp
+from tpDcc import dcc
 
 
 class RenameException(Exception):
@@ -21,9 +21,9 @@ class RenameException(Exception):
         if not hasattr(nodes, '__iter__'):
             nodes = [nodes]
         for node in nodes:
-            if not tp.Dcc.object_exists(node):
+            if not dcc.node_exists(node):
                 error_text += "\t'%s' no longer exists.\n" % node
-            elif tp.Dcc.node_is_locked(node):
+            elif dcc.node_is_locked(node):
                 error_text += "\t'%s' is locked.\n" % node
             else:
                 error_text += "\t'%s' failure unknows.\n" % node

@@ -7,12 +7,15 @@ Renamer widget model class implementation
 
 from __future__ import print_function, division, absolute_import
 
-from Qt.QtCore import *
+import logging
 
-import tpDcc as tp
+from Qt.QtCore import QObject, Signal
+
+from tpDcc import dcc
 from tpDcc.libs.python import python
+from tpDcc.managers import tools, configs
 
-LOGGER = tp.LogsMgr().get_logger('tpDcc-tools-renamer')
+LOGGER = logging.getLogger('tpDcc-tools-renamer')
 
 
 class RenamerModel(QObject, object):
@@ -28,11 +31,11 @@ class RenamerModel(QObject, object):
     uniqueIdAutoChanged = Signal(bool)
     lastJointEndAutoChanged = Signal(bool)
 
-    def __init__(self, config, names_config, naming_config):
+    def __init__(self, config=None, names_config=None, naming_config=None):
         super(RenamerModel, self).__init__()
 
-        self._config = config if config else tp.ToolsMgr().get_tool_config('tpDcc-tools-renamer')
-        self._names_config = names_config if names_config else tp.ConfigsMgr().get_config(config_name='tpDcc-naming')
+        self._config = config if config else tools.ToolsManager().get_tool_config('tpDcc-tools-renamer')
+        self._names_config = names_config if names_config else configs.get_config(config_name='tpDcc-naming')
         self._naming_config = naming_config
         self._selection_type = 0
         self._hierarchy_check = False
@@ -135,7 +138,7 @@ class RenamerModel(QObject, object):
 
     @property
     def node_types(self):
-        return tp.Dcc.OBJECT_TYPES.keys()
+        return dcc.node_types().keys()
 
     @property
     def rules(self):

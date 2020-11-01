@@ -7,14 +7,15 @@ Renamer widget controller class implementation
 
 from __future__ import print_function, division, absolute_import
 
+import logging
 import traceback
 
-import tpDcc as tp
+from tpDcc import dcc
 from tpDcc.libs.python import strings
 from tpDcc.libs.nameit.core import namelib
 from tpDcc.tools.renamer.core import utils
 
-LOGGER = tp.LogsMgr().get_logger('tpDcc-tools-renamer')
+LOGGER = logging.getLogger('tpDcc-tools-renamer')
 
 
 class RenamerController(object):
@@ -73,18 +74,18 @@ class RenamerController(object):
         duplicated_names = dict()
         generated_names = list()
 
-        if tp.is_maya():
-            import tpDcc.dccs.maya as maya
+        if dcc.is_maya():
+            import maya.api.OpenMaya
 
         for item in items:
             compare_item = item
             if not text:
                 base_name = None
-                if tp.is_maya():
+                if dcc.is_maya():
                     if hasattr(item, 'object'):
                         mobj = item.object()
                         try:
-                            dag_path = maya.OpenMaya.MDagPath.getAPathTo(mobj)
+                            dag_path = maya.api.OpenMaya.MDagPath.getAPathTo(mobj)
                             base_name = dag_path.partialPathName()
                             compare_item = base_name
                         except Exception as exc:
@@ -94,14 +95,14 @@ class RenamerController(object):
                     if hasattr(item, 'obj'):
                         base_name = item.obj
                     else:
-                        base_name = tp.Dcc.node_short_name(item)
+                        base_name = dcc.node_short_name(item)
             else:
                 base_name = text
-                if tp.is_maya():
+                if dcc.is_maya():
                     if hasattr(item, 'object'):
                         mobj = item.object()
                         try:
-                            dag_path = maya.OpenMaya.MDagPath.getAPathTo(mobj)
+                            dag_path = maya.api.OpenMaya.MDagPath.getAPathTo(mobj)
                             compare_item = dag_path.partialPathName()
                         except Exception as exc:
                             LOGGER.warning('Error while retrieving node path from MObject: {}'.format(exc))
@@ -168,14 +169,10 @@ class RenamerController(object):
 
         self._model.active_rule = active_rule
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def auto_rename(self, tokens_dict, unique_id=True, last_joint_end=True):
 
-        if not tp.is_maya():
-            LOGGER.warning('Auto renaming feature is only available in Maya for now ...')
-            return False
-
-        import tpDcc.dccs.maya as maya
+        import maya.cmds
 
         active_rule = self._model.active_rule
         if not active_rule:
@@ -211,7 +208,7 @@ class RenamerController(object):
                 for i, obj_name in enumerate(reversed(objs_to_rename)):
                     obj_uuid = maya.cmds.ls(obj_name, uuid=True)[0]
                     if obj_uuid in solved_names:
-                        tp.logger.warning(
+                        LOGGER.warning(
                             'Node with name: "{} and UUID "{}" already renamed to "{}"! Skipping ...'.format(
                                 obj_name, obj_uuid, solved_names[obj_name]))
                         continue
@@ -230,7 +227,7 @@ class RenamerController(object):
                         if shape_nodes and maya.cmds.objectType(shape_nodes[0]) == 'nurbsCurve':
                             obj_type = 'controller'
                         else:
-                            children = tp.Dcc.list_children(obj_name)
+                            children = dcc.list_children(obj_name)
                             if not children and last_joint_end:
                                 obj_type = 'jointEnd'
                     if obj_type == 'nurbsCurve':
@@ -249,7 +246,7 @@ class RenamerController(object):
 
                     if 'node_type' in tokens_dict and tokens_dict['node_type']:
                         node_type = tokens_dict.pop('node_type')
-                    node_name = tp.Dcc.node_short_name(obj_name)
+                    node_name = dcc.node_short_name(obj_name)
                     if 'description' in tokens_dict and tokens_dict['description']:
                         description = tokens_dict['description']
                     else:
@@ -263,13 +260,13 @@ class RenamerController(object):
                             description, side=side, node_type=node_type)
                     if not solved_name:
                         continue
-                    solved_name = tp.Dcc.find_unique_name(solved_name)
+                    solved_name = dcc.find_unique_name(solved_name)
                     solved_names[obj_uuid] = solved_name
 
         if solved_names:
             for obj_id, solved_name in solved_names.items():
                 obj_name = maya.cmds.ls(obj_id, long=True)[0]
-                tp.Dcc.rename_node(obj_name, solved_name, uuid=obj_id, rename_shape=rename_shape)
+                dcc.rename_node(obj_name, solved_name, uuid=obj_id, rename_shape=rename_shape)
         else:
             for obj_name in objs_to_rename:
                 solve_name = self._naming_lib.solve(**tokens_dict)
@@ -278,7 +275,7 @@ class RenamerController(object):
                         'Impossible to rename "{}" with rule "{}" | "{}"'.format(obj_name, rule_name, tokens_dict))
                     continue
                 try:
-                    tp.Dcc.rename_node(obj_name, solve_name, rename_shape=rename_shape)
+                    dcc.rename_node(obj_name, solve_name, rename_shape=rename_shape)
                 except Exception as exc:
                     LOGGER.error('Impossible to rename "{}" to "{}" | {}'.format(obj_name, solve_name, exc))
                     continue
@@ -286,7 +283,7 @@ class RenamerController(object):
             if current_rule:
                 self._naming_lib.set_active_rule(current_rule.name)
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def rename(self, **kwargs):
         hierarchy_check = self._model.hierarchy_check
         selection_type = self._model.selection_type
@@ -298,11 +295,11 @@ class RenamerController(object):
             LOGGER.warning('Impossible to rename because was impossible to generate some of the names ...')
             return
 
-        if tp.is_maya():
-            import tpDcc.dccs.maya as maya
+        if dcc.is_maya():
+            import maya.api.OpenMaya
 
         for item, new_name in zip(nodes, generated_names):
-            if tp.is_maya():
+            if dcc.is_maya():
                 mobj = None
                 if hasattr(item, 'handle'):
                     mobj = item.handle.object()
@@ -310,7 +307,7 @@ class RenamerController(object):
                     mobj = item.object()
                 if mobj:
                     try:
-                        dag_path = maya.OpenMaya.MDagPath.getAPathTo(mobj)
+                        dag_path = maya.api.OpenMaya.MDagPath.getAPathTo(mobj)
                         full_name = dag_path.fullPathName()
                     except Exception as exc:
                         if hasattr(item, 'full_name'):
@@ -327,7 +324,7 @@ class RenamerController(object):
                     full_name = item
 
             try:
-                tp.Dcc.rename_node(full_name, new_name)
+                dcc.rename_node(full_name, new_name)
                 if hasattr(item, 'obj') and hasattr(item, 'preview_name'):
                     item.obj = item.preview_name
                     item.preview_name = ''
@@ -338,8 +335,8 @@ class RenamerController(object):
             self, items, name, prefix=None, suffix=None, side='', index=-1, padding=0, letters=False, capital=False,
             remove_first=0, remove_last=0, search_str=None, replace_str=None, joint_end=False):
 
-        if tp.is_maya():
-            import tpDcc.dccs.maya as maya
+        if dcc.is_maya():
+            import maya.api.OpenMaya
 
         if prefix:
             if side and side != '':
@@ -376,11 +373,11 @@ class RenamerController(object):
             if hasattr(item, 'obj'):
                 item_names.append(item.obj)
             else:
-                if tp.is_maya():
+                if dcc.is_maya():
                     if hasattr(item, 'object'):
                         mobj = item.object()
                         try:
-                            dag_path = maya.OpenMaya.MDagPath.getAPathTo(mobj)
+                            dag_path = maya.api.OpenMaya.MDagPath.getAPathTo(mobj)
                             item_to_add = dag_path.partialPathName()
                             item_names.append(item_to_add)
                             continue
@@ -391,7 +388,7 @@ class RenamerController(object):
                     item_names.append(item)
 
         # if object exists, try next index
-        if tp.Dcc.object_exists(test_name) or test_name in item_names:
+        if dcc.node_exists(test_name) or test_name in item_names:
             new_index = int(index) + 1
             return self._find_manual_available_name(
                 items, name, prefix=prefix, index=new_index, padding=padding,

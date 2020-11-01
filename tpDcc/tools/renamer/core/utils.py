@@ -7,9 +7,11 @@ Module that contains utils functions for renamer tool
 
 from __future__ import print_function, division, absolute_import
 
-import tpDcc as tp
+import logging
 
-LOGGER = tp.LogsMgr().get_logger('tpDcc-tools-renamer')
+from tpDcc import dcc
+
+LOGGER = logging.getLogger('tpDcc-tools-renamer')
 
 
 def get_objects_to_rename(hierarchy_check, selection_type, uuid=False):
@@ -17,9 +19,9 @@ def get_objects_to_rename(hierarchy_check, selection_type, uuid=False):
     search_selection = True if selection_type == 0 else False
 
     if not search_selection:
-        objs_to_rename = tp.Dcc.all_scene_objects(full_path=True)
+        objs_to_rename = dcc.all_scene_nodes(full_path=True)
     else:
-        objs_to_rename = tp.Dcc.selected_nodes(full_path=True)
+        objs_to_rename = dcc.selected_nodes(full_path=True)
 
     if not objs_to_rename:
         LOGGER.warning('No objects to rename!')
@@ -28,17 +30,17 @@ def get_objects_to_rename(hierarchy_check, selection_type, uuid=False):
     if search_hierarchy:
         children_list = list()
         for obj in objs_to_rename:
-            children = tp.Dcc.list_children(obj, all_hierarchy=True, full_path=True)
+            children = dcc.list_children(obj, all_hierarchy=True, full_path=True)
             if children:
                 children_list.extend(children)
         children_list = list(set(children_list))
         objs_to_rename.extend(children_list)
 
-    if uuid and tp.is_maya():
+    if uuid and dcc.is_maya():
         import tpDcc.dccs.maya as maya
 
         handles_list = list()
-        # objs_to_rename = [obj for obj in objs_to_rename if tp.Dcc.node_type(obj) == 'transform']
+        # objs_to_rename = [obj for obj in objs_to_rename if dcc.node_type(obj) == 'transform']
         for obj in objs_to_rename:
             mobj = maya.OpenMaya.MObject()
             sel = maya.OpenMaya.MSelectionList()

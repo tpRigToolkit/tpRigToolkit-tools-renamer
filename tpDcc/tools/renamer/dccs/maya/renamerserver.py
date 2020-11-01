@@ -12,13 +12,17 @@ __license__ = "MIT"
 __maintainer__ = "Tomas Poveda"
 __email__ = "tpovedatd@gmail.com"
 
-import tpDcc as tp
+import logging
+
+import maya.api.OpenMaya
+
+from tpDcc import dcc
 from tpDcc.core import server
 
-import tpDcc.dccs.maya as maya
+from tpDcc.dccs.maya import api
 from tpDcc.dccs.maya.core import namespace, gui
 
-LOGGER = tp.LogsMgr().get_logger('tpDcc-tools-renamer')
+LOGGER = logging.getLogger('tpDcc-tools-renamer')
 
 
 class RenamerServer(server.DccServer, object):
@@ -81,9 +85,9 @@ class RenamerServer(server.DccServer, object):
         rename_shape = data.get('rename_shape', True)
         nodes = data.get('nodes', list())
         if not nodes:
-            nodes = tp.Dcc.selected_nodes()
+            nodes = dcc.selected_nodes()
         for node in nodes:
-            tp.Dcc.rename_node(node, new_name, rename_shape=rename_shape)
+            dcc.rename_node(node, new_name, rename_shape=rename_shape)
 
         reply['success'] = True
 
@@ -95,7 +99,7 @@ class RenamerServer(server.DccServer, object):
             reply['msg'] = 'No prefix to add defined.'
             return
 
-        if tp.is_maya():
+        if dcc.is_maya():
             if prefix_text[0].isdigit():
                 reply['success'] = False
                 reply['msg'] = 'Maya does not supports names with digits as first character.'
@@ -106,7 +110,7 @@ class RenamerServer(server.DccServer, object):
         selection_only = data.get('only_selection', True)
         filter_type = data.get('filter_type', None)
 
-        tp.Dcc.add_name_prefix(
+        dcc.add_name_prefix(
             prefix=prefix_text, filter_type=filter_type, search_hierarchy=search_hierarchy,
             selection_only=selection_only, rename_shape=rename_shape)
 
@@ -123,7 +127,7 @@ class RenamerServer(server.DccServer, object):
             reply['success'] = False
             return
 
-        tp.Dcc.remove_name_prefix(
+        dcc.remove_name_prefix(
             filter_type=filter_type, search_hierarchy=search_hierarchy,
             selection_only=selection_only, rename_shape=rename_shape)
 
@@ -146,18 +150,18 @@ class RenamerServer(server.DccServer, object):
             reply['success'] = False
             return
 
-        filtered_obj_list = tp.Dcc.filter_nodes_by_type(
+        filtered_obj_list = dcc.filter_nodes_by_type(
             filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only)
 
         for obj in filtered_obj_list:
-            original_name = tp.Dcc.node_short_name(obj)
+            original_name = dcc.node_short_name(obj)
             new_name = obj[num_to_remove + 1:]
             if not new_name:
                 LOGGER.warning(
                     'Impossible to rename {}. Total characters to remove is greater or equal than '
                     'the original name length: {} >= {}'.format(original_name, num_to_remove, len(original_name)))
                 continue
-            tp.Dcc.rename_node(obj, new_name, rename_shape=rename_shape)
+            dcc.rename_node(obj, new_name, rename_shape=rename_shape)
 
         reply['success'] = True
 
@@ -173,7 +177,7 @@ class RenamerServer(server.DccServer, object):
         selection_only = data.get('only_selection', True)
         filter_type = data.get('filter_type', None)
 
-        tp.Dcc.add_name_suffix(
+        dcc.add_name_suffix(
             suffix=suffix_text, filter_type=filter_type, search_hierarchy=search_hierarchy,
             selection_only=selection_only, rename_shape=rename_shape)
 
@@ -192,7 +196,7 @@ class RenamerServer(server.DccServer, object):
             reply['msg'] = msg
             return
 
-        tp.Dcc.remove_name_suffix(
+        dcc.remove_name_suffix(
             filter_type=filter_type, search_hierarchy=search_hierarchy,
             selection_only=selection_only, rename_shape=rename_shape)
 
@@ -219,18 +223,18 @@ class RenamerServer(server.DccServer, object):
             reply['msg'] = msg
             return
 
-        filtered_obj_list = tp.Dcc.filter_nodes_by_type(
+        filtered_obj_list = dcc.filter_nodes_by_type(
             filter_type=filter_type, search_hierarchy=search_hierarchy, selection_only=selection_only)
 
         for obj in filtered_obj_list:
-            original_name = tp.Dcc.node_short_name(obj)
+            original_name = dcc.node_short_name(obj)
             new_name = obj[:-num_to_remove]
             if not new_name:
                 LOGGER.warning(
                     'Impossible to rename {}. Total characters to remove is greater or equal than '
                     'the original name length: {} >= {}'.format(original_name, num_to_remove, len(original_name)))
                 continue
-            tp.Dcc.rename_node(obj, new_name, rename_shape=rename_shape)
+            dcc.rename_node(obj, new_name, rename_shape=rename_shape)
 
         reply['success'] = True
 
@@ -255,7 +259,7 @@ class RenamerServer(server.DccServer, object):
             reply['msg'] = msg
             return
 
-        tp.Dcc.renumber_objects(
+        dcc.renumber_objects(
             filter_type=filter_type, remove_trailing_numbers=True, padding=int(pad), add_underscore=True,
             rename_shape=rename_shape, search_hierarchy=search_hierarchy, selection_only=selection_only
         )
@@ -283,7 +287,7 @@ class RenamerServer(server.DccServer, object):
             reply['msg'] = msg
             return
 
-        tp.Dcc.renumber_objects(
+        dcc.renumber_objects(
             filter_type=filter_type, remove_trailing_numbers=False, padding=int(pad), add_underscore=True,
             rename_shape=rename_shape, search_hierarchy=search_hierarchy, selection_only=selection_only
         )
@@ -311,7 +315,7 @@ class RenamerServer(server.DccServer, object):
             reply['msg'] = msg
             return
 
-        tp.Dcc.change_suffix_padding(
+        dcc.change_suffix_padding(
             filter_type=filter_type, padding=int(pad), add_underscore=True, rename_shape=rename_shape,
             search_hierarchy=search_hierarchy, selection_only=selection_only
         )
@@ -332,7 +336,7 @@ class RenamerServer(server.DccServer, object):
             reply['msg'] = msg
             return
 
-        tp.Dcc.add_name_suffix(
+        dcc.add_name_suffix(
             suffix=side, filter_type=filter_type, add_underscore=True, rename_shape=rename_shape,
             search_hierarchy=search_hierarchy, selection_only=selection_only
         )
@@ -386,15 +390,14 @@ class RenamerServer(server.DccServer, object):
         replace_str = data.get('replace', '')
         nodes = data.get('nodes', list())
         if not nodes:
-            nodes = tp.Dcc.selected_nodes()
+            nodes = dcc.selected_nodes()
 
         handles_list = list()
         for obj in nodes:
-            mobj = maya.OpenMaya.MObject()
-            sel = maya.OpenMaya.MSelectionList()
+            sel = api.SelectionList()
             sel.add(obj)
-            sel.getDependNode(0, mobj)
-            handle = maya.OpenMaya.MObjectHandle(mobj)
+            mobj = sel.get_depend_node(0)
+            handle = maya.api.OpenMaya.MObjectHandle(mobj)
             handles_list.append(handle)
 
         new_name = None
@@ -402,11 +405,11 @@ class RenamerServer(server.DccServer, object):
             node = node_handle
             try:
                 mobj = node_handle.object()
-                dag_path = maya.OpenMaya.MDagPath.getAPathTo(mobj)
+                dag_path = maya.api.OpenMaya.MDagPath.getAPathTo(mobj)
                 node = dag_path.partialPathName()
                 obj_short_name = dag_path.partialPathName()
                 new_name = obj_short_name.replace(search_str, replace_str)
-                tp.Dcc.rename_node(node, new_name)
+                dcc.rename_node(node, new_name)
             except Exception as exc:
                 LOGGER.warning('Impossible to rename {} >> {} | {}'.format(node, new_name, exc))
 
@@ -418,7 +421,7 @@ class RenamerServer(server.DccServer, object):
         selection_only = data.get('only_selection', True)
         filter_type = data.get('filter_type', None)
 
-        tp.Dcc.auto_name_suffix(
+        dcc.auto_name_suffix(
             filter_type=filter_type, rename_shape=rename_shape, search_hierarchy=search_hierarchy,
             selection_only=selection_only)
 
@@ -430,7 +433,7 @@ class RenamerServer(server.DccServer, object):
         selection_only = data.get('only_selection', True)
         filter_type = data.get('filter_type', None)
 
-        tp.Dcc.find_unique_name(
+        dcc.find_unique_name(
             filter_type=filter_type, do_rename=True, rename_shape=rename_shape, search_hierarchy=search_hierarchy,
             selection_only=selection_only)
 
@@ -442,7 +445,7 @@ class RenamerServer(server.DccServer, object):
         selection_only = data.get('only_selection', True)
         filter_type = data.get('filter_type', None)
 
-        tp.Dcc.remove_name_numbers(
+        dcc.remove_name_numbers(
             filter_type=filter_type, rename_shape=rename_shape, search_hierarchy=search_hierarchy,
             selection_only=selection_only, trailing_only=False)
 
@@ -454,7 +457,7 @@ class RenamerServer(server.DccServer, object):
         selection_only = data.get('only_selection', True)
         filter_type = data.get('filter_type', None)
 
-        tp.Dcc.remove_name_numbers(
+        dcc.remove_name_numbers(
             filter_type=filter_type, rename_shape=rename_shape, search_hierarchy=search_hierarchy,
             selection_only=selection_only, trailing_only=True)
 

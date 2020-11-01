@@ -7,12 +7,12 @@ Widget that manages basic rename functionality for tpDcc-tools-renamer
 
 from __future__ import print_function, division, absolute_import
 
+from Qt.QtCore import Qt, Signal, QObject, QRegExp
+from Qt.QtWidgets import QWidget, QSizePolicy
+from Qt.QtGui import QRegExpValidator
 
-from Qt.QtCore import *
-from Qt.QtWidgets import *
-from Qt.QtGui import *
-
-import tpDcc as tp
+from tpDcc import dcc
+from tpDcc.managers import resources
 from tpDcc.libs.qt.core import base
 from tpDcc.libs.qt.widgets import layouts, buttons, checkbox, lineedit
 
@@ -62,7 +62,7 @@ class RenamerView(base.BaseWidget, object):
         text_validator = QRegExpValidator(reg_ex, self._renamer_line)
         self._renamer_line.setValidator(text_validator)
         self._renamer_btn = buttons.BaseButton(parent=self)
-        self._renamer_btn.setIcon(tp.ResourcesMgr().icon('rename'))
+        self._renamer_btn.setIcon(resources.icon('rename'))
         rename_layout.addWidget(self._renamer_btn)
 
     def setup_signals(self):
@@ -153,7 +153,7 @@ class RenamerWidgetController(object):
     def change_name(self, new_name):
         self._model.name = new_name
 
-    @tp.Dcc.undo_decorator()
+    @dcc.undo_decorator()
     def rename_simple(self):
         global_data = self._model.global_data
         new_name = self._model.name
