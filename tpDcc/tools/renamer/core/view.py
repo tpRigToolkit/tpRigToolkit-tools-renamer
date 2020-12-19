@@ -69,9 +69,8 @@ class RenamerView(base.BaseWidget, object):
         self._auto_rename_shapes_cbx = None
         self._auto_rename_shapes_cbx = checkbox.BaseCheckBox('Auto Rename Shapes', parent=self)
         self._auto_rename_shapes_cbx.setChecked(True)
-        if not dcc.is_maya():
+        if not dcc.client().is_maya():
             self._auto_rename_shapes_cbx.setVisible(False)
-            self._auto_rename_shapes_cbx.setEnabled(False)
 
         selection_layout.addWidget(self._selected_radio)
         selection_layout.addWidget(self._all_radio)
@@ -230,7 +229,7 @@ class RenamerView(base.BaseWidget, object):
         :param flag: bool
         """
 
-        self._hierarchy_cbx.setChecked(flag)
+        self._auto_rename_shapes_cbx.setChecked(flag)
 
     def _on_filter_type_changed(self, value):
         """

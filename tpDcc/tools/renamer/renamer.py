@@ -7,7 +7,6 @@ Module that contains core implementation for Renamer Tool
 
 from __future__ import print_function, division, absolute_import
 
-import os
 import logging
 import importlib
 
@@ -38,8 +37,6 @@ class RenamerTool(tool.DccTool, object):
             'icon': 'renamer',
             'tooltip': 'Renamer Tool to easily rename DCC objects in a visual way',
             'tags': ['tpDcc', 'dcc', 'tool', 'renamer'],
-            'logger_dir': os.path.join(os.path.expanduser('~'), 'tpDcc', 'logs', 'tools'),
-            'logger_level': 'INFO',
             'is_checkable': False,
             'is_checked': False,
             'menu_ui': {'label': 'Renamer', 'load_on_startup': False, 'color': '', 'background_color': ''}
@@ -104,3 +101,17 @@ class RenamerToolsetWidget(toolset.ToolsetWidget, object):
             model=renamer_model, controller=renamer_controller, parent=self)
 
         return [renamer_view]
+
+
+if __name__ == '__main__':
+    import os
+    import sys
+    import tpDcc.loader
+    from tpDcc.managers import tools
+
+    tool_path = os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+    if tool_path not in sys.path:
+        sys.path.append(tool_path)
+
+    tpDcc.loader.init()
+    tools.ToolsManager().launch_tool_by_id(TOOL_ID)
