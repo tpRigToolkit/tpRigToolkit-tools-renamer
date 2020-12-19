@@ -11,6 +11,14 @@ Subpackages
    tpDcc.tools.renamer.dccs
    tpDcc.tools.renamer.widgets
 
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   tpDcc.tools.renamer.renamer
+
 Module contents
 ---------------
 
