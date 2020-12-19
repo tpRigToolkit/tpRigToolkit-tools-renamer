@@ -30,6 +30,8 @@ class ManualRenameWidget(base.BaseWidget, object):
 
         super(ManualRenameWidget, self).__init__(parent=parent)
 
+        self.refresh()
+
     def ui(self):
         super(ManualRenameWidget, self).ui()
 
@@ -63,8 +65,10 @@ class ManualRenameWidget(base.BaseWidget, object):
         self._model.globalAttributeChanged.connect(self._on_updated_global_attribute)
         self._rename_btn.clicked.connect(self._on_rename)
 
-    def _on_updated_global_attribute(self):
+    def refresh(self):
+        self._update_global_attribute()
 
+    def _update_global_attribute(self):
         global_attributes_dict = {
             'selection_type': self._model.selection_type,
             'filter_type': self._model.filter_type,
@@ -78,6 +82,9 @@ class ManualRenameWidget(base.BaseWidget, object):
             if not widget:
                 continue
             widget.model.global_data = global_attributes_dict
+
+    def _on_updated_global_attribute(self):
+        self._update_global_attribute()
 
     def _on_rename(self):
 

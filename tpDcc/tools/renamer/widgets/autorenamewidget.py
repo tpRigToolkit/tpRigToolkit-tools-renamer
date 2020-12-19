@@ -94,9 +94,19 @@ class AutoRenameWidget(base.BaseWidget, object):
     def refresh(self):
         self._unique_id_cbx.setChecked(self._model.unique_id_auto)
         self._last_joint_end_cbx.setChecked(self._model.last_joint_end_auto)
+        self._update_global_attribute()
 
     def _add_token(self, token_name, line_layout):
         self.main_auto_layout.addRow(token_name, line_layout)
+
+    def _update_global_attribute(self):
+        self._global_attributes_dict = {
+            'selection_type': self._model.selection_type,
+            'filter_type': self._model.filter_type,
+            'hierarchy_check': self._model.hierarchy_check,
+            'rename_shape': self._model.rename_shape,
+            'only_selection': True if self._model.selection_type == 0 else False
+        }
 
     def _on_update_rules(self, new_rules):
 
@@ -202,14 +212,7 @@ class AutoRenameWidget(base.BaseWidget, object):
 #         self.renameUpdated.emit()
 
     def _on_updated_global_attribute(self):
-
-        self._global_attributes_dict = {
-            'selection_type': self._model.selection_type,
-            'filter_type': self._model.filter_type,
-            'hierarchy_check': self._model.hierarchy_check,
-            'rename_shape': self._model.rename_shape,
-            'only_selection': True if self._model.selection_type == 0 else False
-        }
+        self._update_global_attribute()
 
     def _on_rename(self):
 
