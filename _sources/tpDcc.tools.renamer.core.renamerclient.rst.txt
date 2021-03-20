@@ -1,7 +1,0 @@
-tpDcc.tools.renamer.core.renamerclient module
-=============================================
-
-.. automodule:: tpDcc.tools.renamer.core.renamerclient
-   :members:
-   :undoc-members:
-   :show-inheritance:

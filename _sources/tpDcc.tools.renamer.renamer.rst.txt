@@ -1,7 +1,0 @@
-tpDcc.tools.renamer.renamer module
-==================================
-
-.. automodule:: tpDcc.tools.renamer.renamer
-   :members:
-   :undoc-members:
-   :show-inheritance:

@@ -7,10 +7,13 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   tpDcc.tools.renamer.core.client
+   tpDcc.tools.renamer.core.consts
    tpDcc.tools.renamer.core.controller
    tpDcc.tools.renamer.core.exceptions
    tpDcc.tools.renamer.core.model
-   tpDcc.tools.renamer.core.renamerclient
+   tpDcc.tools.renamer.core.tool
+   tpDcc.tools.renamer.core.toolset
    tpDcc.tools.renamer.core.utils
    tpDcc.tools.renamer.core.view
 
