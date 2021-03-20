@@ -9,13 +9,10 @@ from __future__ import print_function, division, absolute_import
 
 import os
 import sys
-import logging
 
 from tpDcc.core import dcc, tool
 
 from tpDcc.tools.renamer.core import consts, client, toolset
-
-LOGGER = logging.getLogger('tpDcc-tools-renamer')
 
 
 class RenamerTool(tool.DccTool, object):
@@ -36,9 +33,9 @@ class RenamerTool(tool.DccTool, object):
             'supported_dccs': {
                 dcc.Dccs.Maya: ['2017', '2018', '2019', '2020, 2021'],
                 dcc.Dccs.Max: ['2017.0', '2018.0', '2019.0', '2020.0', '2021.0'],
-                dcc.Dccs.MotionBuilder:  ['2017', '2018', '2019', '2020, 2021'],
-                dcc.Dccs.Unreal:  ['4.25.4-14469661+++UE4+Release-4.25'],
-                dcc.Dccs.Houdini:  ['2017', '2018', '2019', '2020, 2021']
+                dcc.Dccs.MotionBuilder: ['2017', '2018', '2019', '2020, 2021'],
+                dcc.Dccs.Unreal: ['4.25.4-14469661+++UE4+Release-4.25'],
+                dcc.Dccs.Houdini: ['2017', '2018', '2019', '2020, 2021']
             },
             'logo': 'renamer',
             'icon': 'tpdcc',
