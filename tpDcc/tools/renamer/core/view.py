@@ -162,7 +162,7 @@ class RenamerView(base.BaseWidget, object):
         nodes_to_discard = self._model.nodes_to_discard
         types_to_discard = self._model.types_to_discard
         for node_type in types_to_discard:
-            nodes_to_discard.extend(dcc.list_nodes(node_type=node_type))
+            nodes_to_discard.extend(dcc.client().list_nodes(node_type=node_type))
 
         for i, category in enumerate(categories):
             for category_name, category_data in category.items():

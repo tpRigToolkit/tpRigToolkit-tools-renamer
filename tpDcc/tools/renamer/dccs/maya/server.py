@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 
 """
-Module that contains tpDcc-tools-renamer server implementation
+Module that contains tpDcc-tools-renamer server implementation for Maya
 """
 
 from __future__ import print_function, division, absolute_import
 
 import logging
+from collections import OrderedDict
 
 import maya.api.OpenMaya
 
@@ -22,52 +23,6 @@ LOGGER = logging.getLogger('tpDcc-tools-renamer')
 
 class RenamerServer(server.DccServer, object):
     PORT = 16231
-
-    def _process_command(self, command_name, data_dict, reply_dict):
-        if command_name == 'simple_rename':
-            self.simple_rename(data_dict, reply_dict)
-        elif command_name == 'add_prefix':
-            self.add_prefix(data_dict, reply_dict)
-        elif command_name == 'remove_prefix':
-            self.remove_prefix(data_dict, reply_dict)
-        elif command_name == 'remove_first':
-            self.remove_first(data_dict, reply_dict)
-        elif command_name == 'add_suffix':
-            self.add_suffix(data_dict, reply_dict)
-        elif command_name == 'remove_suffix':
-            self.remove_suffix(data_dict, reply_dict)
-        elif command_name == 'remove_last':
-            self.remove_last(data_dict, reply_dict)
-        elif command_name == 'replace_padding':
-            self.replace_padding(data_dict, reply_dict)
-        elif command_name == 'append_padding':
-            self.append_padding(data_dict, reply_dict)
-        elif command_name == 'change_padding':
-            self.change_padding(data_dict, reply_dict)
-        elif command_name == 'add_side':
-            self.add_side(data_dict, reply_dict)
-        elif command_name == 'add_replace_namespace':
-            self.add_replace_namespace(data_dict, reply_dict)
-        elif command_name == 'remove_namespace':
-            self.remove_namespace(data_dict, reply_dict)
-        elif command_name == 'search_and_replace':
-            self.search_and_replace(data_dict, reply_dict)
-        elif command_name == 'automatic_suffix':
-            self.automatic_suffix(data_dict, reply_dict)
-        elif command_name == 'make_unique_name':
-            self.make_unique_name(data_dict, reply_dict)
-        elif command_name == 'remove_all_numbers':
-            self.remove_all_numbers(data_dict, reply_dict)
-        elif command_name == 'remove_trail_numbers':
-            self.remove_trail_numbers(data_dict, reply_dict)
-        elif command_name == 'clean_unused_namespaces':
-            self.clean_unused_namespaces(data_dict, reply_dict)
-        elif command_name == 'open_namespace_editor':
-            self.open_namespace_editor(data_dict, reply_dict)
-        elif command_name == 'open_reference_editor':
-            self.open_reference_editor(data_dict, reply_dict)
-        else:
-            super(RenamerServer, self)._process_command(command_name, data_dict, reply_dict)
 
     def simple_rename(self, data, reply):
 
@@ -86,6 +41,65 @@ class RenamerServer(server.DccServer, object):
 
         reply['success'] = True
 
+    def find_auto_solved_data(self, data, reply):
+
+        auto_rename_data = OrderedDict()
+
+        auto_suffixes = data.get('auto_suffixes', dict())
+        tokens_dict = data.get('tokens_dict', dict())
+        last_joint_end = data.get('last_joint_end', True)
+        nodes = data.get('nodes', list())
+        if not nodes:
+            nodes = dcc.selected_nodes()
+
+        for i, obj_name in enumerate(reversed(nodes)):
+            node_uuid = dcc.node_handle(obj_name)
+            if node_uuid in auto_rename_data:
+                LOGGER.warning(
+                    'Node with name: "{} and UUID "{}" already renamed to "{}"! Skipping ...'.format(
+                        obj_name, node_uuid, auto_rename_data[obj_name]))
+                continue
+
+            obj_type = dcc.object_type(obj_name)
+            if obj_type == 'transform':
+                shape_nodes = dcc.list_shapes(obj_name, full_path=True)
+                if not shape_nodes:
+                    obj_type = 'group'
+                else:
+                    obj_type = dcc.object_type(shape_nodes[0])
+            elif obj_type == 'joint':
+                shape_nodes = maya.cmds.listRelatives(obj_name, shapes=True, fullPath=True)
+                if shape_nodes and maya.cmds.objectType(shape_nodes[0]) == 'nurbsCurve':
+                    obj_type = 'controller'
+                else:
+                    children = dcc.list_children(obj_name)
+                    if not children and last_joint_end:
+                        obj_type = 'jointEnd'
+            if obj_type == 'nurbsCurve':
+                connections = maya.cmds.listConnections('{}.message'.format(obj_name))
+                if connections:
+                    for node in connections:
+                        if maya.cmds.nodeType(node) == 'controller':
+                            obj_type = 'controller'
+                            break
+            if obj_type not in auto_suffixes:
+                node_type = obj_type
+            else:
+                node_type = auto_suffixes[obj_type]
+
+            if 'node_type' in tokens_dict and tokens_dict['node_type']:
+                node_type = tokens_dict.pop('node_type')
+            node_name = dcc.node_short_name(obj_name)
+            if 'description' in tokens_dict and tokens_dict['description']:
+                description = tokens_dict['description']
+            else:
+                description = node_name
+
+            auto_rename_data[node_uuid] = {'description': description, 'node_type': node_type}
+
+        reply['success'] = True
+        reply['result'] = auto_rename_data
+
     def add_prefix(self, data, reply):
 
         prefix_text = data.get('prefix_text', '')
@@ -94,11 +108,10 @@ class RenamerServer(server.DccServer, object):
             reply['msg'] = 'No prefix to add defined.'
             return
 
-        if dcc.is_maya():
-            if prefix_text[0].isdigit():
-                reply['success'] = False
-                reply['msg'] = 'Maya does not supports names with digits as first character.'
-                return
+        if prefix_text[0].isdigit():
+            reply['success'] = False
+            reply['msg'] = 'Maya does not supports names with digits as first character.'
+            return
 
         rename_shape = data.get('rename_shape', True)
         search_hierarchy = data.get('hierarchy_check', False)

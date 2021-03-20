@@ -35,7 +35,7 @@ class ManualRenameWidget(base.BaseWidget, object):
     def ui(self):
         super(ManualRenameWidget, self).ui()
 
-        manual_accordion = accordion.AccordionWidget()
+        manual_accordion = accordion.AccordionWidget(parent=self)
         self.main_layout.addWidget(manual_accordion)
 
         self._renamer_widget = renamerwidget.renamer_widget(client=self._controller.client, parent=self)
@@ -43,7 +43,7 @@ class ManualRenameWidget(base.BaseWidget, object):
             client=self._controller.client, naming_config=self._model.naming_config, parent=self)
         self._number_side_widget = numbersidewidget.number_side_widget(client=self._controller.client, parent=self)
         self._namespace_widget = None
-        if dcc.is_maya():
+        if dcc.client().is_maya():
             self._namespace_widget = namespacewidget.namespace_widget(client=self._controller.client, parent=self)
         self._replacer_widget = replacerwidget.replacer_widget(client=self._controller.client, parent=self)
         self._utils_widget = utilswidget.utils_widget(client=self._controller.client, parent=self)

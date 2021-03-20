@@ -131,13 +131,13 @@ class CategoryWidget(base.BaseWidget, object):
         try:
             objs_names = list()
             if not selected_objects:
-                objs_names.extend(dcc.all_scene_nodes(full_path=True))
+                objs_names.extend(dcc.client().all_scene_nodes(full_path=True))
             else:
-                objs_names.extend(dcc.selected_nodes(full_path=True))
+                objs_names.extend(dcc.client().selected_nodes(full_path=True))
                 if objs_names and hierarchy:
                     children_list = list()
                     for obj in objs_names:
-                        children = dcc.list_children(obj, all_hierarchy=True, full_path=True)
+                        children = dcc.client().list_children(obj, all_hierarchy=True, full_path=True)
                         if children:
                             children_list.extend(children)
                     children_list = list(set(children_list))
@@ -177,7 +177,7 @@ class CategoryWidget(base.BaseWidget, object):
         discard_nodes = self._default_nodes_to_discard[:] or list()
 
         if self._hide_default_scene_nodes_cbx and self._hide_default_scene_nodes_cbx.isChecked():
-            discard_nodes.extend(dcc.default_scene_nodes(full_path=False))
+            discard_nodes.extend(dcc.client().default_scene_nodes(full_path=False))
 
         # discard_nodes.extend(dcc.list_nodes(node_type='camera'))
 
@@ -185,7 +185,7 @@ class CategoryWidget(base.BaseWidget, object):
             if not btn.isChecked():
                 dcc_type = btn.property('dcc_type')
                 if dcc_type:
-                    discard_nodes.extend(dcc.list_nodes(node_type=btn.property('dcc_type')))
+                    discard_nodes.extend(dcc.client().list_nodes(node_type=btn.property('dcc_type')))
                 else:
                     dcc_fn = btn.property('dcc_fn')
                     if dcc_fn:
@@ -201,22 +201,22 @@ class CategoryWidget(base.BaseWidget, object):
 
     def _get_node_types(self):
         node_types = set()
-        for btn in self._category_buttons:
-            dcc_type = btn.property('dcc_type')
-            if dcc_type:
-                node_types.add(dcc_type)
-            else:
-                dcc_fn = btn.property('dcc_fn')
-                if dcc_fn:
-                    dcc_args = btn.property('dcc_args')
-                    if dcc.is_maya():
-                        valid_args = dict()
-                        for arg_name, arg_value in dcc_args.items():
-                            valid_args[str(arg_name)] = arg_value
-                        nodes = getattr(maya.cmds, dcc_fn)(**valid_args)
-                        for node in nodes:
-                            node_type = dcc.node_type(node)
-                            node_types.add(node_type)
+        # for btn in self._category_buttons:
+        #     dcc_type = btn.property('dcc_type')
+        #     if dcc_type:
+        #         node_types.add(dcc_type)
+        #     else:
+        #         dcc_fn = btn.property('dcc_fn')
+        #         if dcc_fn:
+        #             dcc_args = btn.property('dcc_args')
+        #             if dcc.is_maya():
+        #                 valid_args = dict()
+        #                 for arg_name, arg_value in dcc_args.items():
+        #                     valid_args[str(arg_name)] = arg_value
+        #                 nodes = getattr(maya.cmds, dcc_fn)(**valid_args)
+        #                 for node in nodes:
+        #                     node_type = dcc.node_type(node)
+        #                     node_types.add(node_type)
 
         return list(node_types)
 
@@ -233,25 +233,25 @@ class CategoryWidget(base.BaseWidget, object):
         for obj in nodes:
             if obj in nodes_to_discard:
                 continue
-            node_type = dcc.node_type(obj)
+            node_type = dcc.client().node_type(obj)
             if node_type not in self._get_node_types() and not self._others_btn.isChecked():
                 is_valid = False
                 for node_type in self._get_node_types():
-                    is_valid = dcc.check_object_type(obj, node_type, check_sub_types=True)
+                    is_valid = dcc.client().check_object_type(obj, node_type, check_sub_types=True)
                     if is_valid:
                         break
                 if not is_valid:
                     continue
 
-            node_name = dcc.node_short_name(obj)
+            node_name = dcc.client().node_short_name(obj)
             item = QTreeWidgetItem(self._names_list, [node_name])
             item.obj = node_name
             item.preview_name = ''
             item.full_name = obj
-            if dcc.is_maya():
-                sel = api.SelectionList()
-                sel.add(obj)
-                item.handle = maya.OpenMaya.MObjectHandle(sel.get_depend_node(0))
+            # if dcc.is_maya():
+            #     sel = api.SelectionList()
+            #     sel.add(obj)
+            #     item.handle = maya.OpenMaya.MObjectHandle(sel.get_depend_node(0))
 
             self._names_list.addTopLevelItem(item)
 

@@ -191,13 +191,13 @@ class PrefixSuffixView(base.BaseWidget, object):
         if suffixes:
             self._prefix_combo.addItem('Select prefix ...')
             self._suffix_combo.addItem('Select suffix ...')
-            format_items = ['{}: "{}"'.format(suffix.keys()[0], suffix.values()[0]) for suffix in suffixes]
+            format_items = ['{}: "{}"'.format(list(suffix.keys())[0], list(suffix.values())[0]) for suffix in suffixes]
             for i, item in enumerate(format_items):
                 item_index = i + 1      # First index if selected prefix/suffix items ...
                 self._prefix_combo.addItem(item)
                 self._suffix_combo.addItem(item)
-                self._prefix_combo.setItemData(item_index, suffixes[i].values()[0])
-                self._suffix_combo.setItemData(item_index, suffixes[i].values()[0])
+                self._prefix_combo.setItemData(item_index, list(suffixes[i].values())[0])
+                self._suffix_combo.setItemData(item_index, list(suffixes[i].values())[0])
 
     #     self.renameUpdate.emit()
 

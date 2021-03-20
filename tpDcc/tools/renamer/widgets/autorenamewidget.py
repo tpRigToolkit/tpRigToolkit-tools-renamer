@@ -7,6 +7,7 @@ Widget that contains auto rename widgets for tpRenamer
 
 from __future__ import print_function, division, absolute_import
 
+import os
 import logging
 import traceback
 from functools import partial
@@ -18,7 +19,7 @@ from Qt.QtWidgets import QLabel
 
 from tpDcc.managers import resources
 from tpDcc.libs.qt.core import base, qtutils
-from tpDcc.libs.qt.widgets import layouts, buttons, dividers, combobox, label, lineedit, checkbox
+from tpDcc.libs.qt.widgets import layouts, buttons, dividers, combobox, label, lineedit, checkbox, directory
 
 LOGGER = logging.getLogger('tpDcc-tools-renamer')
 
@@ -37,22 +38,32 @@ class AutoRenameWidget(base.BaseWidget, object):
     def ui(self):
         super(AutoRenameWidget, self).ui()
 
+        directory_layout = layouts.HorizontalLayout(spacing=2, margins=(0, 0, 0, 0))
+        self._refresh_btn = buttons.BaseButton('Refresh', parent=self)
+        self._refresh_btn.setIcon(resources.icon('refresh'))
+        self._refresh_btn.setEnabled(False)
+        self._file_directory = directory.SelectFile('Naming File', parent=self)
+        directory_layout.addWidget(self._refresh_btn)
+        directory_layout.addWidget(self._file_directory)
+
         top_layout = layouts.HorizontalLayout(spacing=2, margins=(0, 0, 0, 0))
         self._unique_id_cbx = checkbox.BaseCheckBox('Unique Id')
         self._last_joint_end_cbx = checkbox.BaseCheckBox('Make Last Joint End')
         top_layout.addStretch()
         top_layout.addWidget(self._unique_id_cbx)
         top_layout.addWidget(self._last_joint_end_cbx)
-        self.main_layout.addLayout(top_layout)
 
         main_splitter = QSplitter(Qt.Horizontal)
         main_splitter.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        self.main_layout.addWidget(main_splitter)
 
         auto_widget = QWidget()
         auto_layout = layouts.VerticalLayout(spacing=0, margins=(0, 0, 0, 0))
         auto_widget.setLayout(auto_layout)
         main_splitter.addWidget(auto_widget)
+
+        self._expression_line = lineedit.BaseLineEdit(parent=self)
+        self._expression_line.setReadOnly(True)
+        self._expression_line.setPlaceholderText('Rule Expression')
 
         self._rules_list = QTreeWidget(self)
         self._rules_list.setHeaderHidden(True)
@@ -76,13 +87,21 @@ class AutoRenameWidget(base.BaseWidget, object):
 
         self._rename_btn = buttons.BaseButton('Rename')
         self._rename_btn.setIcon(resources.icon('rename'))
+        self._refresh_btn.setEnabled(False)
+
+        self.main_layout.addLayout(directory_layout)
+        self.main_layout.addLayout(top_layout)
+        self.main_layout.addWidget(self._expression_line)
+        self.main_layout.addWidget(main_splitter)
         self.main_layout.addLayout(dividers.DividerLayout())
         self.main_layout.addWidget(self._rename_btn)
 
     def setup_signals(self):
+        self._refresh_btn.clicked.connect(self._on_refresh)
+        self._file_directory.directoryChanged.connect(self._on_naming_file_changed)
         self._unique_id_cbx.toggled.connect(self._controller.change_unique_id_auto)
         self._last_joint_end_cbx.toggled.connect(self._controller.change_last_joint_end_auto)
-        self._rules_list.currentItemChanged.connect(self._controller.change_selected_rule)
+        self._rules_list.itemSelectionChanged.connect(self._on_rule_selected)
         self._model.globalAttributeChanged.connect(self._on_updated_global_attribute)
         self._rename_btn.clicked.connect(self._on_rename)
 
@@ -94,6 +113,7 @@ class AutoRenameWidget(base.BaseWidget, object):
     def refresh(self):
         self._unique_id_cbx.setChecked(self._model.unique_id_auto)
         self._last_joint_end_cbx.setChecked(self._model.last_joint_end_auto)
+        self._file_directory.set_directory(self._controller.naming_lib.naming_file)
         self._update_global_attribute()
 
     def _add_token(self, token_name, line_layout):
@@ -128,16 +148,20 @@ class AutoRenameWidget(base.BaseWidget, object):
 
             if item_to_select:
                 self._rules_list.setItemSelected(item_to_select, True)
+            else:
+                self._rules_list.clearSelection()
+
         except Exception as exc:
             LOGGER.error('{} | {}'.format(exc, traceback.format_exc()))
         finally:
             self._rules_list.blockSignals(False)
 
-        self._on_update_active_rule(active_rule=self._model.active_rule)
+        if item_to_select:
+            self._controller.change_selected_rule(item_to_select)
+
+        # self._on_update_active_rule(active_rule=self._model.active_rule)
 
     def _on_update_active_rule(self, active_rule):
-        if not active_rule:
-            return
 
         qtutils.clear_layout(self.main_auto_layout)
 
@@ -226,3 +250,23 @@ class AutoRenameWidget(base.BaseWidget, object):
         last_joint_end = self._model.last_joint_end_auto
 
         return self._controller.auto_rename(tokens_dict, unique_id=unique_id, last_joint_end=last_joint_end)
+
+    def _on_naming_file_changed(self, naming_file_path):
+        self._controller.set_naming_file(naming_file_path)
+        self._refresh_btn.setEnabled(bool(naming_file_path and os.path.isfile(naming_file_path)))
+
+    def _on_refresh(self):
+        self._controller.naming_lib.init_naming_data()
+        self._controller.update_rules()
+
+    def _on_rule_selected(self):
+        rule_items = self._rules_list.selectedItems()
+        rule_item = rule_items[0] if rule_items else None
+        if not rule_item or not hasattr(rule_item, 'rule'):
+            self._rename_btn.setEnabled(False)
+            self._expression_line.setText('')
+            self._controller.change_selected_rule(None)
+        else:
+            self._rename_btn.setEnabled(True)
+            self._expression_line.setText(rule_item.rule.expression)
+            self._controller.change_selected_rule(rule_item.rule)

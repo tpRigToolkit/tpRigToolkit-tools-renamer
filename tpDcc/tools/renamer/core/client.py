@@ -49,6 +49,22 @@ class RenamerClient(client.DccClient, object):
 
         return reply_dict['success']
 
+    def find_auto_solved_data(self, auto_suffixes, tokens_dict, last_joint_end=True, nodes=None):
+        cmd = {
+            'cmd': 'find_auto_solved_data',
+            'auto_suffixes': auto_suffixes,
+            'tokens_dict': tokens_dict,
+            'last_joint_end': last_joint_end,
+            'nodes': python.force_list(nodes)
+        }
+
+        reply_dict = self.send(cmd)
+
+        if not self.is_valid_reply(reply_dict):
+            return False
+
+        return reply_dict['result']
+
     def add_prefix(self, prefix_text, rename_shape=True, hierarchy_check=False, only_selection=True, filter_type=None):
         cmd = {
             'cmd': 'add_prefix',
