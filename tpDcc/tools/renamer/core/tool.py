@@ -62,7 +62,5 @@ if __name__ == '__main__':
     if tool_path not in sys.path:
         sys.path.append(tool_path)
 
-    # naming_file = r"D:\rigs\rigscript\samurai\naming.yml"
-
     tpDcc.loader.init()
     tools.ToolsManager().launch_tool_by_id(consts.TOOL_ID)
