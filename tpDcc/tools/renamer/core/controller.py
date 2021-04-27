@@ -65,6 +65,7 @@ class RenamerController(object):
         joint_end = kwargs.get('joint_end', False)
         search_str = kwargs.get('search', '')
         replace_str = kwargs.get('replace', '')
+        items = python.force_list(items)
 
         duplicated_names = dict()
         generated_names = list()
@@ -344,3 +345,15 @@ class RenamerController(object):
             )
 
         return test_name
+
+    def add_plugin_widget(self, plugin_class, parent, close_button_visible=True, data=None):
+        plugin_widget = plugin_class.create(parent)
+        plugin_widget.close_button_visible(close_button_visible)
+        if data and isinstance(data, dict):
+            plugin_widget.model.data = data
+        self._model.plugin_widgets.append(plugin_widget)
+        self._model.addPluginWidget.emit(plugin_widget)
+
+    def remove_plugin_widget(self, plugin_widget):
+        self._model.plugin_widgets.remove(plugin_widget)
+        self._model.removePluginWidget.emit(plugin_widget)

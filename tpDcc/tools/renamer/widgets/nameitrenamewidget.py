@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Widget that contains auto rename widgets for tpRenamer
+Widget that contains auto rename widget
 """
 
 from __future__ import print_function, division, absolute_import
@@ -21,22 +21,24 @@ from tpDcc.managers import resources
 from tpDcc.libs.qt.core import base, qtutils
 from tpDcc.libs.qt.widgets import layouts, buttons, dividers, combobox, label, lineedit, checkbox, directory
 
-LOGGER = logging.getLogger('tpDcc-tools-renamer')
+from tpDcc.tools.renamer.core import consts
+
+logger = logging.getLogger(consts.TOOL_ID)
 
 
-class AutoRenameWidget(base.BaseWidget, object):
+class NameItRenameWidget(base.BaseWidget):
     def __init__(self, model, controller, parent=None):
 
         self._model = model
         self._controller = controller
         self._token_widgets = OrderedDict()
 
-        super(AutoRenameWidget, self).__init__(parent=parent)
+        super(NameItRenameWidget, self).__init__(parent=parent)
 
         self.refresh()
 
     def ui(self):
-        super(AutoRenameWidget, self).ui()
+        super(NameItRenameWidget, self).ui()
 
         directory_layout = layouts.HorizontalLayout(spacing=2, margins=(0, 0, 0, 0))
         self._refresh_btn = buttons.BaseButton('Refresh', parent=self)
@@ -152,7 +154,7 @@ class AutoRenameWidget(base.BaseWidget, object):
                 self._rules_list.clearSelection()
 
         except Exception as exc:
-            LOGGER.error('{} | {}'.format(exc, traceback.format_exc()))
+            logger.error('{} | {}'.format(exc, traceback.format_exc()))
         finally:
             self._rules_list.blockSignals(False)
 

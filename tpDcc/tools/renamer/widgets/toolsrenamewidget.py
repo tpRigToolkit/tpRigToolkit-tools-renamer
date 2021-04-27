@@ -18,7 +18,7 @@ from tpDcc.tools.renamer.widgets import renamerwidget, replacerwidget, prefixsuf
 from tpDcc.tools.renamer.widgets import namespacewidget, utilswidget
 
 
-class ManualRenameWidget(base.BaseWidget, object):
+class ToolsRenameWidget(base.BaseWidget, object):
 
     renameUpdate = Signal()
     replaceUpdate = Signal()
@@ -28,12 +28,12 @@ class ManualRenameWidget(base.BaseWidget, object):
         self._model = model
         self._controller = controller
 
-        super(ManualRenameWidget, self).__init__(parent=parent)
+        super(ToolsRenameWidget, self).__init__(parent=parent)
 
         self.refresh()
 
     def ui(self):
-        super(ManualRenameWidget, self).ui()
+        super(ToolsRenameWidget, self).ui()
 
         manual_accordion = accordion.AccordionWidget(parent=self)
         self.main_layout.addWidget(manual_accordion)

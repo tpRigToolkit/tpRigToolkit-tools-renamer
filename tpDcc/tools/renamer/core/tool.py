@@ -33,12 +33,12 @@ class RenamerTool(tool.DccTool, object):
             'supported_dccs': {
                 dcc.Dccs.Maya: ['2017', '2018', '2019', '2020, 2021'],
                 dcc.Dccs.Max: ['2017.0', '2018.0', '2019.0', '2020.0', '2021.0'],
-                dcc.Dccs.MotionBuilder: ['2017', '2018', '2019', '2020, 2021'],
-                dcc.Dccs.Unreal: ['4.25.4-14469661+++UE4+Release-4.25'],
-                dcc.Dccs.Houdini: ['2017', '2018', '2019', '2020, 2021']
+                # dcc.Dccs.MotionBuilder: ['2017', '2018', '2019', '2020, 2021'],
+                # dcc.Dccs.Unreal: ['4.25.4-14469661+++UE4+Release-4.25'],
+                # dcc.Dccs.Houdini: ['2017', '2018', '2019', '2020, 2021']
             },
-            'logo': 'renamer',
-            'icon': 'tpdcc',
+            'logo': 'rename',
+            'icon': 'rename',
             'tooltip': 'Renamer Tool to easily rename DCC objects in a visual way',
             'tags': ['tpDcc', 'dcc', 'tool', 'renamer'],
             'is_checkable': False,
@@ -63,4 +63,4 @@ if __name__ == '__main__':
         sys.path.append(tool_path)
 
     tpDcc.loader.init()
-    tools.ToolsManager().launch_tool_by_id(consts.TOOL_ID)
+    tools.ToolsManager().launch_tool_by_id(consts.TOOL_ID, connect_client=False)

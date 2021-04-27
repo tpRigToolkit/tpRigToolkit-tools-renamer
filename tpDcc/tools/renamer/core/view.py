@@ -7,8 +7,6 @@ Renamer widget view class implementation
 
 from __future__ import print_function, division, absolute_import
 
-import logging
-
 from Qt.QtCore import Qt
 from Qt.QtWidgets import QSizePolicy, QButtonGroup, QSpacerItem
 
@@ -17,9 +15,7 @@ from tpDcc.managers import resources
 from tpDcc.libs.qt.core import base
 from tpDcc.libs.qt.widgets import layouts, dividers, splitter, buttons, combobox, checkbox, tabs, stack
 
-from tpDcc.tools.renamer.widgets import manualrenamewidget, autorenamewidget, categorywidget
-
-LOGGER = logging.getLogger('tpDcc-tools-renamer')
+from tpDcc.tools.renamer.widgets import renamerpluginwidget, toolsrenamewidget, nameitrenamewidget, categorywidget
 
 
 class RenamerView(base.BaseWidget, object):
@@ -85,19 +81,21 @@ class RenamerView(base.BaseWidget, object):
         self._splitter = splitter.CollapsibleSplitter(parent=self)
         self._splitter.setOrientation(Qt.Horizontal)
         self._splitter.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
-        self._splitter.setMinimumHeight(750)
         self.main_layout.addWidget(self._splitter)
 
         self._rename_tab = tabs.BaseTabWidget(parent=self)
         self._splitter.addWidget(self._rename_tab)
 
-        self._manual_rename_widget = manualrenamewidget.ManualRenameWidget(
+        self._plugins_renamer_widget = renamerpluginwidget.RenamerPluginWidget(
             model=self._model, controller=self._controller, parent=self)
-        self._auto_rename_widget = autorenamewidget.AutoRenameWidget(
+        self._tools_rename_widget = toolsrenamewidget.ToolsRenameWidget(
+            model=self._model, controller=self._controller, parent=self)
+        self._auto_rename_widget = nameitrenamewidget.NameItRenameWidget(
             model=self._model, controller=self._controller, parent=self)
 
-        self._rename_tab.addTab(self._manual_rename_widget, 'Manual')
-        self._rename_tab.addTab(self._auto_rename_widget, 'Auto')
+        self._rename_tab.addTab(self._plugins_renamer_widget, 'Renamer')
+        self._rename_tab.addTab(self._auto_rename_widget, 'NameIt')
+        self._rename_tab.addTab(self._tools_rename_widget, 'Tools')
 
         self._stack = stack.SlidingStackedWidget()
         # splitter_right_widget = QWidget()
@@ -186,7 +184,7 @@ class RenamerView(base.BaseWidget, object):
                 # category_widget.doRename.connect(self._on_rename)
                 # category_btn.clicked.connect(partial(self._on_category_selected, i + 1))
 
-        self._auto_rename_widget.refresh()
+        # self._auto_rename_widget.refresh()
 
         self._controller.update_rules()
 

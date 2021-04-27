@@ -30,6 +30,9 @@ class RenamerModel(QObject, object):
     tokensChanged = Signal(list)
     uniqueIdAutoChanged = Signal(bool)
     lastJointEndAutoChanged = Signal(bool)
+    addPluginWidget = Signal(object)
+    removePluginWidget = Signal(object)
+    preparePluginsLoad = Signal()
 
     def __init__(self, config=None, naming_config=None):
         super(RenamerModel, self).__init__()
@@ -45,6 +48,7 @@ class RenamerModel(QObject, object):
         self._tokens = list()
         self._unique_id_auto = True
         self._last_joint_end_auto = True
+        self._plugin_widgets = list()
 
     @property
     def config(self):
@@ -182,3 +186,8 @@ class RenamerModel(QObject, object):
     def last_joint_end_auto(self, flag):
         self._last_joint_end_auto = bool(flag)
         self.lastJointEndAutoChanged.emit(self._last_joint_end_auto)
+
+    @property
+    def plugin_widgets(self):
+        return self._plugin_widgets
+

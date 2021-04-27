@@ -11,12 +11,13 @@ import os
 import logging
 
 from tpDcc.managers import configs
+from tpDcc.libs.python import path
 from tpDcc.libs.qt.widgets import toolset
 from tpDcc.libs.nameit.core import namelib
 
-from tpDcc.tools.renamer.core import model, view, controller
+from tpDcc.tools.renamer.core import consts, model, view, controller, plugin
 
-LOGGER = logging.getLogger('tpDcc-tools-renamer')
+logger = logging.getLogger(consts.TOOL_ID)
 
 
 class RenamerToolset(toolset.ToolsetWidget, object):
@@ -29,6 +30,14 @@ class RenamerToolset(toolset.ToolsetWidget, object):
         self._dev = kwargs.get('dev', False)
 
         super(RenamerToolset, self).__init__(*args, **kwargs)
+
+    def pre_content_setup(self):
+        plugins_folder = path.join_path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'plugins')
+        if not os.path.isdir(plugins_folder):
+            logger.warning('Default renamer plugins folder not found: "{}"!'.format(plugins_folder))
+            return
+
+        plugin.PluginsManager().register_path(plugins_folder)
 
     def contents(self):
         if not self._naming_config:

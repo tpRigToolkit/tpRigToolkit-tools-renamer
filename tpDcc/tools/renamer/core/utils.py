@@ -17,6 +17,10 @@ LOGGER = logging.getLogger('tpDcc-tools-renamer')
 
 
 def get_objects_to_rename(hierarchy_check, selection_type, uuid=False):
+
+    if dcc.client(consts.TOOL_ID).is_maya():
+        import maya.OpenMaya
+
     search_hierarchy = hierarchy_check
     search_selection = True if selection_type == 0 else False
 
